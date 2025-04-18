@@ -1,4 +1,4 @@
-aiohttp==3.8.1
 aiogram==2.25
+aiohttp==3.8.1
 python-dotenv
 
