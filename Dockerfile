@@ -1,6 +1,5 @@
 FROM python:3.11
 
-# Установка необходимых системных зависимостей
 RUN apt-get update && apt-get install -y \
     gcc \
     build-essential \
@@ -12,7 +11,8 @@ WORKDIR /app
 COPY . .
 
 RUN pip install --upgrade pip
-RUN pip install -r requirements.txt -c constraints.txt
+RUN pip install -r requirements.txt
 
 CMD ["python", "car_import_bot_with_buttons_and_reset_final.py"]
+
 
