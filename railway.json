@@ -1,0 +1,8 @@
+{
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "python3 car_import_bot_with_buttons_and_reset_final.py"
+  }
+}
