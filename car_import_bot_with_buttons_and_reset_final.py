@@ -1,203 +1,193 @@
-import logging
+# Импорт необходимых библиотек
+import os
 import json
+import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils import executor
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from collections import defaultdict
 
-API_TOKEN = '7772557710:AAE9YdvAK3rOr_BEFyV4grUx5l2nf8KybBs'
+# Логирование
+logging.basicConfig(level=logging.INFO)
+
+# Токен бота из переменной окружения
+API_TOKEN = '7772557710:AAE9YdvAK3rOr_BEFyV4grUx5l2nf8KybBs'  # временно открытый токен
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
-# Загрузка данных о локациях и ценах из файла
+# Хранилище пользовательских данных
+user_data = defaultdict(dict)
+
+# Загрузка данных
 with open('delivery_dict.json', 'r') as f:
     delivery_dict = json.load(f)
-
-# Загрузка сборов для аукционов
 with open('copart_fee_data.json', 'r') as f:
     copart_fee_data = json.load(f)
-
 with open('iaai_fee_data.json', 'r') as f:
     iaai_fee_data = json.load(f)
 
-# Клавиатура для выбора аукциона
-auction_buttons = InlineKeyboardMarkup(row_width=2)
-auction_button_copart = InlineKeyboardButton(text="Copart", callback_data="copart")
-auction_button_iaai = InlineKeyboardButton(text="IAAI", callback_data="iaai")
-auction_buttons.add(auction_button_copart, auction_button_iaai)
+# Клавиатуры
 
-# Клавиатура для выбора локации
-page_size = 10  # Количество локаций на странице
-current_page = 0  # Текущая страница
+def get_auction_keyboard():
+    markup = InlineKeyboardMarkup(row_width=2)
+    markup.add(InlineKeyboardButton("Copart", callback_data="copart"),
+               InlineKeyboardButton("IAAI", callback_data="iaai"))
+    return markup
 
-def create_location_buttons(page=0):
+def create_location_buttons(page=0, page_size=30):
     locations = list(delivery_dict.keys())
     page_locations = locations[page * page_size:(page + 1) * page_size]
-    buttons = InlineKeyboardMarkup(row_width=2)
-    
+    markup = InlineKeyboardMarkup(row_width=2)
     for location in page_locations:
-        buttons.add(InlineKeyboardButton(text=location, callback_data=location))
-    
-    # Кнопки для навигации по страницам
-    navigation_buttons = []
+        markup.add(InlineKeyboardButton(location, callback_data=f"loc_{location}"))
+    nav_buttons = []
     if page > 0:
-        navigation_buttons.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"prev_{page-1}"))
+        nav_buttons.append(InlineKeyboardButton("⬅️ Назад", callback_data=f"page_{page-1}"))
     if (page + 1) * page_size < len(locations):
-        navigation_buttons.append(InlineKeyboardButton(text="Вперед ➡️", callback_data=f"next_{page+1}"))
-    
-    if navigation_buttons:
-        buttons.add(*navigation_buttons)
-    
-    return buttons
+        nav_buttons.append(InlineKeyboardButton("Вперед ➡️", callback_data=f"page_{page+1}"))
+    if nav_buttons:
+        markup.add(*nav_buttons)
+    return markup
 
-# Клавиатура для выбора топлива
-fuel_buttons = InlineKeyboardMarkup(row_width=2)
-fuel_buttons.add(InlineKeyboardButton(text="Бензин", callback_data="gasoline"),
-                 InlineKeyboardButton(text="Дизель", callback_data="diesel"),
-                 InlineKeyboardButton(text="Гибрид", callback_data="hybrid"),
-                 InlineKeyboardButton(text="Электро", callback_data="electric"))
+def get_fuel_keyboard():
+    markup = InlineKeyboardMarkup(row_width=2)
+    fuels = ["gasoline", "diesel", "hybrid", "electric"]
+    for f in fuels:
+        markup.add(InlineKeyboardButton(f.capitalize(), callback_data=f))
+    return markup
 
-# Клавиатура для выбора года выпуска
-year_buttons = InlineKeyboardMarkup(row_width=3)
-for year in range(2010, 2026):
-    year_buttons.add(InlineKeyboardButton(text=str(year), callback_data=str(year)))
+def get_year_keyboard():
+    markup = InlineKeyboardMarkup(row_width=3)
+    for year in range(2010, 2026):
+        markup.add(InlineKeyboardButton(str(year), callback_data=f"year_{year}"))
+    return markup
 
-# Клавиатура для выбора объема двигателя
-engine_volume_buttons = InlineKeyboardMarkup(row_width=3)
-for volume in [1.0, 1.2, 1.5, 1.6, 2.0, 2.5, 3.0, 3.5, 4.0]:
-    engine_volume_buttons.add(InlineKeyboardButton(text=str(volume), callback_data=str(volume)))
+def get_engine_volume_keyboard():
+    markup = InlineKeyboardMarkup(row_width=3)
+    for volume in [1.0, 1.2, 1.5, 1.6, 2.0, 2.5, 3.0, 3.5, 4.0]:
+        markup.add(InlineKeyboardButton(str(volume), callback_data=f"vol_{volume}"))
+    return markup
 
-# Состояния
-user_data = {}
+# Обработчики
 
-# Стартовое сообщение
-@dp.message_handler(commands='start')
-async def cmd_start(message: types.Message):
+@dp.message_handler(commands=['start'])
+async def start(message: types.Message):
     user_data[message.from_user.id] = {}
-    await message.answer("Привет! Выбери аукцион (Copart или IAAI):", reply_markup=auction_buttons)
+    await message.answer("Привет! Выбери аукцион:", reply_markup=get_auction_keyboard())
 
-# Обработка выбора аукциона
-@dp.callback_query_handler(lambda c: c.data == 'copart' or c.data == 'iaai')
-async def auction_chosen(callback_query: types.CallbackQuery):
-    user_data[callback_query.from_user.id]['auction'] = callback_query.data
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, "Теперь введи стоимость автомобиля в долларах:")
+@dp.callback_query_handler(lambda c: c.data in ['copart', 'iaai'])
+async def choose_auction(call: types.CallbackQuery):
+    user_data[call.from_user.id]['auction'] = call.data
+    await call.message.answer("Введи цену автомобиля в долларах:")
 
-# Обработка стоимости автомобиля
-@dp.message_handler(lambda message: message.text.isdigit())
-async def price_chosen(message: types.Message):
-    user_data[message.from_user.id]['price'] = int(message.text)
-    await message.answer("Теперь выбери локацию для доставки в Клайпеду:", reply_markup=create_location_buttons())
+@dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
+async def enter_price(msg: types.Message):
+    user_data[msg.from_user.id]['price'] = float(msg.text)
+    await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
 
-# Обработка навигации по локациям
-@dp.callback_query_handler(lambda c: c.data.startswith('prev_') or c.data.startswith('next_'))
-async def location_pagination(callback_query: types.CallbackQuery):
-    page = int(callback_query.data.split('_')[1])
-    user_data[callback_query.from_user.id]['page'] = page
-    
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, f"Выберите локацию для доставки в Клайпеду:", reply_markup=create_location_buttons(page))
+@dp.callback_query_handler(lambda c: c.data.startswith('page_'))
+async def paginate_locations(call: types.CallbackQuery):
+    page = int(call.data.split('_')[1])
+    await call.message.edit_reply_markup(reply_markup=create_location_buttons(page))
 
-# Обработка выбора локации
-@dp.callback_query_handler(lambda c: c.data in delivery_dict)
-async def location_chosen(callback_query: types.CallbackQuery):
-    user_data[callback_query.from_user.id]['location'] = callback_query.data
-    user_data[callback_query.from_user.id]['delivery_price'] = delivery_dict[callback_query.data]
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, f"Вы выбрали локацию {callback_query.data} с ценой доставки {delivery_dict[callback_query.data]}$. Теперь выбери тип топлива:", reply_markup=fuel_buttons)
+@dp.callback_query_handler(lambda c: c.data.startswith('loc_'))
+async def choose_location(call: types.CallbackQuery):
+    location = call.data[4:]
+    user_data[call.from_user.id]['location'] = location
+    user_data[call.from_user.id]['delivery_price'] = delivery_dict[location]
+    await call.message.answer("Выбери тип топлива:", reply_markup=get_fuel_keyboard())
 
-# Обработка выбора топлива
 @dp.callback_query_handler(lambda c: c.data in ['gasoline', 'diesel', 'hybrid', 'electric'])
-async def fuel_chosen(callback_query: types.CallbackQuery):
-    user_data[callback_query.from_user.id]['fuel'] = callback_query.data
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, "Теперь выбери год выпуска автомобиля:", reply_markup=year_buttons)
+async def choose_fuel(call: types.CallbackQuery):
+    user_data[call.from_user.id]['fuel'] = call.data
+    await call.message.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
 
-# Обработка года выпуска
-@dp.callback_query_handler(lambda c: c.data.isdigit())
-async def year_chosen(callback_query: types.CallbackQuery):
-    user_data[callback_query.from_user.id]['year'] = int(callback_query.data)
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, "Теперь выбери объем двигателя:", reply_markup=engine_volume_buttons)
+@dp.callback_query_handler(lambda c: c.data.startswith('year_'))
+async def choose_year(call: types.CallbackQuery):
+    year = int(call.data[5:])
+    user_data[call.from_user.id]['year'] = year
+    await call.message.answer("Выбери объем двигателя:", reply_markup=get_engine_volume_keyboard())
 
-# Обработка объема двигателя
-@dp.callback_query_handler(lambda c: c.data.replace('.', '', 1).isdigit())
-async def engine_volume_chosen(callback_query: types.CallbackQuery):
-    user_data[callback_query.from_user.id]['engine_volume'] = float(callback_query.data)
-    await bot.answer_callback_query(callback_query.id)
+@dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
+async def choose_volume(call: types.CallbackQuery):
+    volume = float(call.data[4:])
+    user_data[call.from_user.id]['engine_volume'] = volume
+    result, breakdown = calculate_import(user_data[call.from_user.id])
+    text = "\n".join([f"{k}: ${round(v)}" for k, v in breakdown.items()])
+    text += f"\n\nИтоговая сумма: ${round(result)}"
+    markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
+    await call.message.answer(text, reply_markup=markup)
 
-    # Расчёт итоговой стоимости
-    total_cost, additional_fees = calculate_import(user_data[callback_query.from_user.id])
-
-    # Заменяем тип топлива на русский
-    fuel_type = user_data[callback_query.from_user.id]['fuel']
-    if fuel_type == "gasoline":
-        fuel_type = "Бензин"
-    elif fuel_type == "diesel":
-        fuel_type = "Дизель"
-    elif fuel_type == "hybrid":
-        fuel_type = "Гибрид"
-    elif fuel_type == "electric":
-        fuel_type = "Электро"
-
-    # Получаем цену доставки
-    delivery_price = user_data[callback_query.from_user.id]['delivery_price']
-
-    # Сбор аукциона
-    auction_fee = get_auction_fee(user_data[callback_query.from_user.id]['auction'], user_data[callback_query.from_user.id]['price'])
-
-    result_message = f"Расчёт импорта:\n\n" \
-                     f"Аукцион: {user_data[callback_query.from_user.id]['auction']}\n" \
-                     f"Цена авто: ${user_data[callback_query.from_user.id]['price']}\n" \
-                     f"Тип топлива: {fuel_type}\n" \
-                     f"Локация: {user_data[callback_query.from_user.id]['location']}\n" \
-                     f"Стоимость доставки в Клайпеду: ${delivery_price}\n" \
-                     f"Сбор аукциона: ${auction_fee}\n" \
-                     f"Год выпуска: {user_data[callback_query.from_user.id]['year']}\n" \
-                     f"Объем двигателя: {user_data[callback_query.from_user.id]['engine_volume']} литров\n\n" \
-                     f"Итоговая сумма: ${total_cost}\n" \
-                     f"Доп. расходы: {additional_fees}\n\n" \
-                     f"Для сброса данных, нажми кнопку ниже."
-
-    reset_button = InlineKeyboardButton(text="Сбросить данные", callback_data="reset")
-    reset_markup = InlineKeyboardMarkup().add(reset_button)
-
-    await bot.send_message(callback_query.from_user.id, result_message, reply_markup=reset_markup)
-
-# Функция расчёта
-def calculate_import(user_info):
-    # Расчет сборов на основе аукциона
-    auction_fee = get_auction_fee(user_info["auction"], user_info["price"])
-
-    # Примерные значения для расчета (можно адаптировать в зависимости от ваших данных)
-    delivery_fee = user_info["delivery_price"]  # Цена доставки из локации
-    customs_duty = 0.2 * user_info["price"]  # Таможенная пошлина (20% от цены авто)
-    vat = 0.2 * (user_info["price"] + customs_duty)  # НДС (20% от цены + таможенная пошлина)
-
-    # Дополнительные расходы
-    additional_fees = {"Экспедитор": 500, "Доставка в Украину": 1000, "Сертификация": 125, "Пенсионный фонд (3%)": 0.03 * user_info["price"]}
-    total_additional_fees = sum(additional_fees.values())
-
-    total_cost = user_info["price"] + auction_fee + customs_duty + vat + delivery_fee + total_additional_fees
-    return total_cost, additional_fees
-
-# Функция для получения сбора аукциона
-def get_auction_fee(auction, price):
-    fee_data = iaai_fee_data if auction == "IAAI" else copart_fee_data
-    for entry in fee_data:
-        if entry['min'] <= price <= entry['max']:
-            if 'fee' in entry:
-                return entry['fee']
-            elif 'percent' in entry:
-                return round(price * entry['percent'], 2)
-    return 0
-
-# Сброс данных
 @dp.callback_query_handler(lambda c: c.data == 'reset')
-async def reset_data(callback_query: types.CallbackQuery):
-    user_data.clear()
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, "Данные сброшены. Выберите аукцион снова:", reply_markup=auction_buttons)
+async def reset_data(call: types.CallbackQuery):
+    user_data.pop(call.from_user.id, None)
+    await call.message.answer("Начнем заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
+
+# Функция расчета импортных пошлин и стоимости
+
+def calculate_import(data):
+    price = data['price']
+    volume = data['engine_volume']
+    year = data['year']
+    fuel = data['fuel']
+    age = 2025 - year
+    auction_fee = get_auction_fee(data['auction'], price)
+
+    # Таможенная стоимость (цена авто + сбор + доставка в Клайпеду + 1600)
+    customs_base = price + auction_fee + 1600
+
+    # Пенсионный фонд: зависит от таможенной стоимости
+    if customs_base < 37440:
+        pension_percent = 0.03
+    elif customs_base <= 65800:
+        pension_percent = 0.04
+    else:
+        pension_percent = 0.05
+
+    # Акциз
+    if fuel == 'electric':
+        excise_eur = 1 * age
+    elif fuel == 'hybrid':
+        excise_eur = 100 * volume
+    else:
+        rate = 75 if fuel == 'gasoline' else 150
+        excise_eur = rate * volume * age
+
+    euro_to_usd_fixed = 1.1
+    excise = excise_eur * euro_to_usd_fixed
+
+    import_duty = customs_base * 0.10
+    vat = (customs_base + import_duty + excise) * 0.20
+    delivery = data['delivery_price'] + (125 if fuel in ['electric', 'hybrid'] else 0)
+    pension = customs_base * pension_percent
+
+    total = price + auction_fee + delivery + import_duty + excise + vat + 350 + 500 + 1000 + 150 + pension + 100
+
+    breakdown = {
+        'Цена авто': price,
+        'Сбор аукциона': auction_fee,
+        'Доставка в Клайпеду': delivery,
+        'Ввозная пошлина (10%)': import_duty,
+        'Акциз (EUR, пересчитан в USD)': excise,
+        'НДС (20%)': vat,
+        'Экспедитор (Литва)': 350,
+        'Брокерские услуги': 500,
+        'Доставка в Украину': 1000,
+        'Сертификация': 150,
+        f'Пенсионный фонд ({int(pension_percent*100)}%)': pension,
+        'МРЭО (постановка на учет)': 100
+    }
+    return total, breakdown
+
+# Получение сбора аукциона по цене
+
+def get_auction_fee(auction, price):
+    fees = iaai_fee_data if auction == 'iaai' else copart_fee_data
+    for entry in fees:
+        if entry['min'] <= price <= entry['max']:
+            return entry.get('fee', round(price * entry.get('percent', 0), 2))
+    return 0
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
