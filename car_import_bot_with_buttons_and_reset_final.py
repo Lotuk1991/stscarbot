@@ -115,12 +115,11 @@ async def choose_volume(call: types.CallbackQuery):
     user_data[call.from_user.id]['engine_volume'] = volume
     result, breakdown = calculate_import(user_data[call.from_user.id])
 
-        text = "
-".join([f"<b>{k}:</b> ${round(v)}" for k, v in breakdown.items()])
+    text = ""
+    for k, v in breakdown.items():
+        text += f"<b>{k}:</b> ${round(v)}
+"
     text += f"
-
-<b>Итоговая сумма:</b> ${round(result)}"f"
-
 <b>Итоговая сумма:</b> ${round(result)}"
 
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
