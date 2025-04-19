@@ -56,7 +56,7 @@ def get_fuel_keyboard():
     for f in fuels:
         markup.add(InlineKeyboardButton(f.capitalize(), callback_data=f))
     return markup
-
+  
 def get_year_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
     for year in range(2010, 2026):
