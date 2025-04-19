@@ -83,6 +83,35 @@ async def choose_auction(call: types.CallbackQuery):
 
 @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def enter_price(msg: types.Message):
+    user_id = msg.from_user.id
+    user_data[user_id]['price'] = float(msg.text)
+
+    # Если у пользователя уже есть всё остальное — сразу считаем
+    required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+    if all(key in user_data[user_id] for key in required):
+        result, breakdown = calculate_import(user_data[user_id])
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.2f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+        )
+
+        await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
+    else:
+        await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
     user_data[msg.from_user.id]['price'] = float(msg.text)
     await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
 
