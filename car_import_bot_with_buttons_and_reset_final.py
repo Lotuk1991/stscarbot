@@ -117,14 +117,14 @@ async def choose_volume(call: types.CallbackQuery):
 
     # Формируем итоговое сообщение
     text_lines = [f"<b>{k}:</b> ${round(v)}" for k, v in breakdown.items()]
-    text = "
+    text_combined = "
 ".join(text_lines)
-    text += f"
+    text_combined += f"
 
 <b>Итоговая сумма:</b> ${round(result)}"
 
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
-    await call.message.answer(text, reply_markup=markup, parse_mode='HTML')
+    await call.message.answer(text_combined, reply_markup=markup, parse_mode='HTML')
 
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
@@ -210,4 +210,3 @@ def get_auction_fee(auction, price):
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
-
