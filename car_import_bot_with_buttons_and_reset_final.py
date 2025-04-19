@@ -212,6 +212,8 @@ def calculate_import(data):
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
+        'Возраст авто (для расчета акциза)': age,
+        'Акциз (EUR)': excise_eur,
         'Цена авто': price,
         'Сбор аукциона': auction_fee,
         'Локация': data['location'],
@@ -220,7 +222,7 @@ def calculate_import(data):
         'Объем двигателя': f"{volume} л",
         'Год выпуска': str(year),
         'Ввозная пошлина (10%)': import_duty,
-        'Акциз (EUR, пересчитан в USD)': excise,
+        'Акциз (USD)': round(excise, 2),
         'НДС (20%)': vat,
         'Таможенные платежи (итого)': tamozhnya_total,
         'Экспедитор (Литва)': 350,
