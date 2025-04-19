@@ -84,16 +84,8 @@ async def choose_auction(call: types.CallbackQuery):
 @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def enter_price(msg: types.Message):
     user_id = msg.from_user.id
-    text = msg.text
+    user_data[user_id]['price'] = float(msg.text)
 
-    # Если это редактирование любого поля
-    if 'edit_field' in user_data[user_id]:
-        field = user_data[user_id].pop('edit_field')
-        user_data[user_id][field] = float(text)
-    else:
-        user_data[user_id]['price'] = float(text)
-
-    # Проверим, есть ли всё для расчёта
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
@@ -123,7 +115,7 @@ async def enter_price(msg: types.Message):
 
         await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await msg.answer("Поле обновлено.")
+        await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
 @dp.callback_query_handler(lambda c: c.data.startswith('page_'))
 async def paginate_locations(call: types.CallbackQuery):
     page = int(call.data.split('_')[1])
