@@ -357,33 +357,35 @@ async def edit_field(call: types.CallbackQuery):
     user_id = call.from_user.id
     action = call.data
 
-    if action == "edit_price":
-        await call.message.answer("Введи новую цену:")
-    elif action == "edit_location":
-        await call.message.answer("Выбери новую локацию:", reply_markup=create_location_buttons())
-    elif action == "edit_fuel":
-        await call.message.answer("Выбери тип топлива:", reply_markup=get_fuel_keyboard())
-    elif action == "edit_year":
-        await call.message.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
-    elif action == "edit_volume":
-        await call.message.answer("Выбери объем двигателя:", reply_markup=get_engine_volume_keyboard())
-
     field_map = {
-    "edit_price": ("Введи новую цену:", "price"),
-    "edit_location": ("Выбери новую локацию:", "location"),
-    "edit_fuel": ("Выбери тип топлива:", "fuel"),
-    "edit_year": ("Выбери год выпуска:", "year"),
-    "edit_volume": ("Выбери объем двигателя:", "engine_volume"),
-    "edit_expeditor": ("Введи сумму за экспедитора:", "expeditor"),
-    "edit_broker": ("Введи сумму за брокерские услуги:", "broker"),
-    "edit_ukraine_delivery": ("Введи стоимость доставки в Украину:", "delivery_ua"),
-    "edit_cert": ("Введи стоимость сертификации:", "cert"),
-    "edit_stscars": ("Введи цену за услуги компании:", "stscars")
-}
-    field = field_map.get(action)
-    if field:
-        user_data[user_id].pop(field, None)
+        "edit_price": ("Введи новую цену:", "price"),
+        "edit_location": ("Выбери новую локацию:", "location"),
+        "edit_fuel": ("Выбери тип топлива:", "fuel"),
+        "edit_year": ("Выбери год выпуска:", "year"),
+        "edit_volume": ("Выбери объем двигателя:", "engine_volume"),
+        "edit_expeditor": ("Введи сумму за экспедитора:", "expeditor"),
+        "edit_broker": ("Введи сумму за брокерские услуги:", "broker"),
+        "edit_ukraine_delivery": ("Введи стоимость доставки в Украину:", "delivery_ua"),
+        "edit_cert": ("Введи стоимость сертификации:", "cert"),
+        "edit_stscars": ("Введи цену за услуги компании:", "stscars")
+    }
 
+    if action in field_map:
+        prompt, field = field_map[action]
+
+        # Если поле требует клавиатуру (топливо, год, объём, локация) — показать нужную клавиатуру
+        if field == "fuel":
+            await call.message.answer(prompt, reply_markup=get_fuel_keyboard())
+        elif field == "year":
+            await call.message.answer(prompt, reply_markup=get_year_keyboard())
+        elif field == "engine_volume":
+            await call.message.answer(prompt, reply_markup=get_engine_volume_keyboard())
+        elif field == "location":
+            await call.message.answer(prompt, reply_markup=create_location_buttons())
+        else:
+            await call.message.answer(prompt)
+
+        user_data[user_id]['edit_field'] = field
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
@@ -397,7 +399,7 @@ async def handle_numeric_input(msg: types.Message):
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = float(msg.text)
 
-        # Проверим, есть ли всё для пересчёта
+        # Проверим, есть ли все обязательные данные
         required = ['price', 'location', 'fuel', 'year', 'engine_volume']
         if all(key in user_data[user_id] for key in required):
             result, breakdown = calculate_import(user_data[user_id])
