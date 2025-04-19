@@ -349,7 +349,10 @@ async def edit_field(call: types.CallbackQuery):
     field = field_map.get(action)
     if field:
         user_data[user_id].pop(field, None)
-
+@dp.callback_query_handler(lambda c: c.data == 'reset')
+async def reset_data(call: types.CallbackQuery):
+    user_data.pop(call.from_user.id, None)
+    await call.message.answer("Начнём заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
 
 # === Запуск бота ===
 if __name__ == '__main__':
