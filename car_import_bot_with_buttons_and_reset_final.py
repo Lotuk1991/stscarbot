@@ -56,12 +56,12 @@ def get_fuel_keyboard():
     for f in fuels:
         markup.add(InlineKeyboardButton(f.capitalize(), callback_data=f))
     return markup
-
+  
 def get_year_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
     for year in range(2010, 2026):
         markup.add(InlineKeyboardButton(str(year), callback_data=f"year_{year}"))
-    return markup  # Возвращаем пустую клавиатуру, чтобы не отображались года
+    return markup
 
 def get_engine_volume_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
@@ -111,98 +111,29 @@ async def choose_year(call: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
 async def choose_volume(call: types.CallbackQuery):
-    volume = float(call.data[4:])
-    user_data[call.from_user.id]['engine_volume'] = volume
-    result, breakdown = calculate_import(user_data[call.from_user.id])
+    try:
+        volume = float(call.data[4:])
+        user_id = call.from_user.id
+        user_data[user_id]['engine_volume'] = volume
 
-    text = ""
-    for k, v in breakdown.items():
-        text += f"<b>{k}:</b> ${round(v)}\n"
-    text += f"\n<b>Итоговая сумма:</b> ${round(result)}"
+        required_fields = ['price', 'fuel', 'year', 'engine_volume', 'auction', 'location', 'delivery_price']
+        missing = [field for field in required_fields if field not in user_data[user_id]]
+        if missing:
+            await call.message.answer(f"Отсутствуют данные: {', '.join(missing)}. Начни заново с /start.")
+            return
 
-    markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
-    await call.message.answer(text, reply_markup=markup, parse_mode='HTML')
+        result, breakdown = calculate_import(user_data[user_id])
 
-@dp.callback_query_handler(lambda c: c.data == 'reset')
-async def reset_data(call: types.CallbackQuery):
-    user_data.pop(call.from_user.id, None)
-    await call.message.answer("Начнем заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
+        text_lines = []
+        for k, v in breakdown.items():
+            if "Год выпуска" in k:
+                text_lines.append(f"*{k}*: {v}")
+            elif isinstance(v, (int, float)):
+                text_lines.append(f"*{k}*: `${v:,.2f}`")
+            else:
+                text_lines.append(f"*{k}*: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Итоговая сумма*: `${result:,.2f}`"
 
-# Функция расчета импортных пошлин и стоимости
-
-def calculate_import(data):
-    price = data['price']
-    volume = data['engine_volume']
-    year = data['year']
-    fuel = data['fuel']
-    age = 2025 - year
-    auction_fee = get_auction_fee(data['auction'], price)
-
-    # Таможенная стоимость (цена авто + сбор + доставка в Клайпеду + 1600)
-    customs_base = price + auction_fee + 1600
-    invoice_fee = (price + auction_fee + delivery_dict[data['location']]) * 0.05
-
-    # Пенсионный фонд: зависит от таможенной стоимости
-    if customs_base < 37440:
-        pension_percent = 0.03
-    elif customs_base <= 65800:
-        pension_percent = 0.04
-    else:
-        pension_percent = 0.05
-
-    # Акциз
-    if fuel == 'electric':
-        excise_eur = 1 * age
-    elif fuel == 'hybrid':
-        excise_eur = 100 * volume
-    else:
-        rate = 75 if fuel == 'gasoline' else 150
-        excise_eur = rate * volume * age
-
-    euro_to_usd_fixed = 1.1
-    excise = excise_eur * euro_to_usd_fixed
-
-    import_duty = customs_base * 0.10
-    vat = (customs_base + import_duty + excise) * 0.20
-    delivery = data['delivery_price'] + (125 if fuel in ['electric', 'hybrid'] else 0)
-    pension = customs_base * pension_percent
-
-    total = price + auction_fee + delivery + import_duty + excise + vat + 350 + 500 + 1000 + 150 + pension + 100 + invoice_fee + 500
-
-    tamozhnya_total = import_duty + excise + vat
-
-    breakdown = {
-        'Тип топлива': fuel.capitalize(),
-        'Объем двигателя': f"{volume} л",
-        'Год выпуска': year,
-        'Локация': data['location'],
-        'Цена авто': price,
-        'Сбор аукциона': auction_fee,
-        'Доставка в Клайпеду': delivery,
-        'Ввозная пошлина (10%)': import_duty,
-        'Акциз (EUR, пересчитан в USD)': excise,
-        'НДС (20%)': vat,
-        'Таможенные платежи (итого)': tamozhnya_total,
-        'Экспедитор (Литва)': 350,
-        'Брокерские услуги': 500,
-        'Доставка в Украину': 1000,
-        'Сертификация': 150,
-        f'Пенсионный фонд ({int(pension_percent*100),
-        'Комиссия за оплату инвойса (5%)': invoice_fee,
-        'Услуги компании': 500
-    }%)': pension,
-        'МРЭО (постановка на учет)': 100
-    }
-    return total, breakdown
-
-# Получение сбора аукциона по цене
-
-def get_auction_fee(auction, price):
-    fees = iaai_fee_data if auction == 'iaai' else copart_fee_data
-    for entry in fees:
-        if entry['min'] <= price <= entry['max']:
-            return entry.get('fee', round(price * entry.get('percent', 0), 2))
-    return 0
-
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+        markup = InlineKeyboardMarkup().add(
+            InlineKeyboardButton("
