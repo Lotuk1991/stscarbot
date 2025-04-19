@@ -130,16 +130,16 @@ async def choose_volume(call: types.CallbackQuery):
         text = "\n".join(text_lines)
         text += f"\n\n*Итоговая сумма:* ${result:.2f}"
 
-        # Кнопка сброса
-            markup = InlineKeyboardMarkup(row_width=2)
-markup.add(
-    InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
-    InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
-    InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
-    InlineKeyboardButton("📅 Год", callback_data="edit_year"),
-    InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-    InlineKeyboardButton("🔁 Сбросить", callback_data="reset")
-)
+            # Кнопки редактирования
+    markup = InlineKeyboardMarkup(row_width=2)
+    markup.add(
+        InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+        InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+        InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+        InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+        InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+        InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+    )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
 
