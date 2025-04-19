@@ -28,7 +28,6 @@ with open('iaai_fee_data.json', 'r') as f:
     iaai_fee_data = json.load(f)
 
 # Клавиатуры
-
 def get_auction_keyboard():
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(InlineKeyboardButton("Copart", callback_data="copart"),
@@ -70,7 +69,6 @@ def get_engine_volume_keyboard():
     return markup
 
 # Обработчики
-
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     user_data[message.from_user.id] = {}
@@ -109,7 +107,6 @@ async def choose_year(call: types.CallbackQuery):
     user_data[call.from_user.id]['year'] = year
     await call.message.answer("Выбери объем двигателя:", reply_markup=get_engine_volume_keyboard())
 
-
 @dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
 async def choose_volume(call: types.CallbackQuery):
     volume = float(call.data[4:])
@@ -119,18 +116,6 @@ async def choose_volume(call: types.CallbackQuery):
     text += f"\n\nИтоговая сумма: ${result:.2f}"
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
     await call.message.answer(text, reply_markup=markup)
-
-@dp.callback_query_handler(lambda c: c.data == 'reset')
-async def reset_data(call: types.CallbackQuery):
-    user_data.pop(call.from_user.id, None)
-    await call.message.answer("Начнем заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
-
-# Функция расчета импортных пошлин и сто
-
-@dp.callback_query_handler(lambda c: c.data == 'reset')
-async def reset_data(call: types.CallbackQuery):
-    user_data.pop(call.from_user.id, None)
-    await call.message.answer("Начнем заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
 
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
@@ -147,65 +132,31 @@ def calculate_import(data):
     age = 2025 - year
     auction_fee = get_auction_fee(data['auction'], price)
 
-    # Таможенная стоимость (цена авто + сбор + доставка в Клайпеду + 1600)
-    customs_base = price + auction_fee + 1600
-    invoice_fee = (price + auction_fee + delivery_dict[data['location']]) * 0.05
-
-    # Пенсионный фонд: зависит от таможенной стоимости
-    if customs_base < 37440:
-        pension_percent = 0.03
-    elif customs_base <= 65800:
-        pension_percent = 0.04
-    else:
-        pension_percent = 0.05
-
-    # Акциз
     if fuel == 'electric':
-        excise_eur = 1 * age
+        excise = 1 * age  # минимальный акциз
     elif fuel == 'hybrid':
-        excise_eur = 100 * volume
+        excise = 100 * volume
     else:
         rate = 75 if fuel == 'gasoline' else 150
-        excise_eur = rate * volume * age
+        excise = rate * volume * age
 
-    euro_to_usd_fixed = 1.1
-    excise = excise_eur * euro_to_usd_fixed
+    import_duty = price * 0.10
+    vat = (price + import_duty + excise) * 0.20
 
-    import_duty = customs_base * 0.10
-    vat = (customs_base + import_duty + excise) * 0.20
     delivery = data['delivery_price'] + (125 if fuel in ['electric', 'hybrid'] else 0)
-    pension = customs_base * pension_percent
 
-    total = price + auction_fee + delivery + import_duty + excise + vat + 350 + 500 + 1000 + 150 + pension + 100 + invoice_fee + 500
-
-    tamozhnya_total = import_duty + excise + vat
-
+    total = price + auction_fee + delivery + import_duty + excise + vat
     breakdown = {
-
         'Цена авто': price,
         'Сбор аукциона': auction_fee,
-        'Локация': data['location'],
         'Доставка в Клайпеду': delivery,
-        'Тип топлива': fuel.capitalize(),
-        'Объем двигателя': f"{volume} л",
-        'Год выпуска': year,
         'Ввозная пошлина (10%)': import_duty,
-        'Акциз (EUR, пересчитан в USD)': excise,
-        'НДС (20%)': vat,
-        'Таможенные платежи (итого)': tamozhnya_total,
-        'Экспедитор (Литва)': 350,
-        'Брокерские услуги': 500,
-        'Доставка в Украину': 1000,
-        'Сертификация': 150,
-        f'Пенсионный фонд ({int(pension_percent*100)}%)': pension,
-        'МРЭО (постановка на учет)': 100,
-        'Комиссия за оплату инвойса (5%)': invoice_fee,
-        'Услуги компании': 500
+        'Акциз': excise,
+        'НДС (20%)': vat
     }
     return total, breakdown
 
 # Получение сбора аукциона по цене
-
 def get_auction_fee(auction, price):
     fees = iaai_fee_data if auction == 'iaai' else copart_fee_data
     for entry in fees:
