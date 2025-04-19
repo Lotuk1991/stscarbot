@@ -132,8 +132,15 @@ async def choose_volume(call: types.CallbackQuery):
 
         # Кнопка сброса
         markup = InlineKeyboardMarkup().add(
-            InlineKeyboardButton("🔁 Сбросить", callback_data="reset")
-        )
+            markup = InlineKeyboardMarkup(row_width=2)
+markup.add(
+    InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+    InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+    InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+    InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+    InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+    InlineKeyboardButton("🔁 Сбросить", callback_data="reset")
+)
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
 
@@ -219,6 +226,37 @@ def get_auction_fee(auction, price):
         if entry['min'] <= price <= entry['max']:
             return entry.get('fee', round(price * entry.get('percent', 0), 2))
     return 0
+# === Обработчик редактирования шагов ===
+@dp.callback_query_handler(lambda c: c.data.startswith('edit_'))
+async def edit_field(call: types.CallbackQuery):
+    user_id = call.from_user.id
+    action = call.data
 
+    if action == "edit_price":
+        await call.message.answer("Введи новую цену:")
+    elif action == "edit_location":
+        await call.message.answer("Выбери новую локацию:", reply_markup=create_location_buttons())
+    elif action == "edit_fuel":
+        await call.message.answer("Выбери тип топлива:", reply_markup=get_fuel_keyboard())
+    elif action == "edit_year":
+        await call.message.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
+    elif action == "edit_volume":
+        await call.message.answer("Выбери объем двигателя:", reply_markup=get_engine_volume_keyboard())
+
+    field_map = {
+        "edit_price": "price",
+        "edit_location": "location",
+        "edit_fuel": "fuel",
+        "edit_year": "year",
+        "edit_volume": "engine_volume"
+    }
+    field = field_map.get(action)
+    if field:
+        user_data[user_id].pop(field, None)
+
+
+# === Запуск бота ===
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
