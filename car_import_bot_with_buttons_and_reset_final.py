@@ -59,9 +59,8 @@ def get_fuel_keyboard():
 
 def get_year_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
-    for year in range(2010, 2026):
-        markup.add(InlineKeyboardButton(str(year), callback_data=f"year_{year}"))
-    return markup
+    # Убираем кнопки, если не нужны вовсе — либо оставь пустую клавиатуру, либо задай выбор по-другому
+    return markup  # Возвращаем пустую клавиатуру, чтобы не отображались года
 
 def get_engine_volume_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
@@ -114,15 +113,25 @@ async def choose_volume(call: types.CallbackQuery):
     volume = float(call.data[4:])
     user_data[call.from_user.id]['engine_volume'] = volume
     result, breakdown = calculate_import(user_data[call.from_user.id])
-    text = "\n".join([f"{k}: ${v:.2f}" for k, v in breakdown.items()])
-    text += f"\n\nИтоговая сумма: ${result:.2f}"
-    markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
-    await call.message.answer(text, reply_markup=markup)
 
-@dp.callback_query_handler(lambda c: c.data == 'reset')
-async def reset_data(call: types.CallbackQuery):
-    user_data.pop(call.from_user.id, None)
-    await call.message.answer("Начнем заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
+    text = ""
+    for k, v in breakdown.items():
+        text += f"<b>{k}:</b> ${round(v)}
+"
+    text += f"
+<b>Итоговая сумма:</b> ${round(result)}"
+
+    markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
+        text = ""
+    for k, v in breakdown.items():
+        text += f"<b>{k}:</b> ${round(v)}
+"
+    text += f"
+<b>Итоговая сумма:</b> ${round(result)}"
+
+    markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
+    await call.message.answer(text, reply_markup=markup, parse_mode='HTML')
+
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
