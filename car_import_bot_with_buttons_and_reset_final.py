@@ -124,10 +124,15 @@ async def choose_volume(call: types.CallbackQuery):
 
         result, breakdown = calculate_import(user_data[user_id])
 
-        text = "\n".join([
-            f"*{k}*: `${v:,.2f}`" if isinstance(v, (int, float)) else f"*{k}*: {v}"
-            for k, v in breakdown.items()
-        ])
+        text_lines = []
+        for k, v in breakdown.items():
+            if "Год выпуска" in k:
+                text_lines.append(f"*{k}*: {v}")
+            elif isinstance(v, (int, float)):
+                text_lines.append(f"*{k}*: `${v:,.2f}`")
+            else:
+                text_lines.append(f"*{k}*: {v}")
+        text = "\n".join(text_lines)
         text += f"\n\n*Итоговая сумма*: `${result:,.2f}`"
 
         markup = InlineKeyboardMarkup().add(
@@ -142,7 +147,6 @@ async def choose_volume(call: types.CallbackQuery):
             "🚫 Что-то пошло не так при расчете. Пожалуйста, начни заново с команды /start."
         )
 
-    
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
@@ -192,14 +196,13 @@ def calculate_import(data):
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
-
         'Цена авто': price,
         'Сбор аукциона': auction_fee,
         'Локация': data['location'],
         'Доставка в Клайпеду': delivery,
         'Тип топлива': fuel.capitalize(),
         'Объем двигателя': f"{volume} л",
-        'Год выпуска': year,
+        'Год выпуска': str(year),
         'Ввозная пошлина (10%)': import_duty,
         'Акциз (EUR, пересчитан в USD)': excise,
         'НДС (20%)': vat,
