@@ -238,7 +238,7 @@ restart_markup.add(restart_button)
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
     user_data[message.chat.id] = {}  # Очистка данных пользователя
-    await message.answer("Привіт! Обери аукціон (Copart або IAAI):", reply_markup=auction_markup):", reply_markup=auction_markup)
+    await message.answer("Привіт! Обери аукціон (Copart або IAAI):", reply_markup=auction_markup)
 
 # Выбор аукциона
 @dp.message_handler(lambda msg: msg.chat.id in user_data and 'auction' not in user_data[msg.chat.id])
@@ -346,3 +346,50 @@ async def edit_field_handler(message: types.Message):
     elif text == "📦 Сбросить":
         user_data[chat_id] = {}
         await message.answer("Данные сброшены. Начнем сначала. Выбери аукцион:", reply_markup=auction_markup)
+
+
+
+@dp.message_handler(lambda msg: msg.text == "⬅️ Назад" or msg.text == "➡️ Далі")
+async def paginate_locations(message: types.Message):
+    chat_id = message.chat.id
+    current_page = user_data[chat_id].get("location_page", 0)
+    per_page = 20
+    locations = list(delivery_prices.keys())
+
+    if message.text == "➡️ Далі":
+        current_page += 1
+    elif message.text == "⬅️ Назад":
+        current_page -= 1
+
+    current_page = max(0, min(current_page, len(locations) // per_page))
+    user_data[chat_id]["location_page"] = current_page
+
+    start = current_page * per_page
+    end = start + per_page
+    page_locations = locations[start:end]
+
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    for loc in page_locations:
+        markup.add(KeyboardButton(loc))
+
+    nav_buttons = []
+    if current_page > 0:
+        nav_buttons.append(KeyboardButton("⬅️ Назад"))
+    if end < len(locations):
+        nav_buttons.append(KeyboardButton("➡️ Далі"))
+    if nav_buttons:
+        markup.add(*nav_buttons)
+
+    await message.answer("Оберіть локацію для доставки:", reply_markup=markup)
+
+@dp.message_handler(lambda msg: msg.chat.id in user_data and 'volume' in user_data[msg.chat.id] and 'delivery_location' not in user_data[msg.chat.id])
+async def delivery_location_paginated(message: types.Message):
+    chat_id = message.chat.id
+    if message.text in delivery_prices:
+        user_data[chat_id]["delivery_location"] = message.text
+        user_data[chat_id]["delivery_price"] = delivery_prices[message.text]
+        await message.answer(f"Вибрана площадка: {message.text}\nВартість доставки до Клайпеди: ${delivery_prices[message.text]}")
+        await message.answer("Оберіть тип пального:", reply_markup=fuel_markup)
+    else:
+        user_data[chat_id]["location_page"] = 0
+        await paginate_locations(message)
