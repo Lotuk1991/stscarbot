@@ -109,7 +109,7 @@ async def choose_year(call: types.CallbackQuery):
     user_data[call.from_user.id]['year'] = year
     await call.message.answer("Выбери объем двигателя:", reply_markup=get_engine_volume_keyboard())
 
-dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
+@dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
 async def choose_volume(call: types.CallbackQuery):
     volume = float(call.data[4:])
     user_data[call.from_user.id]['engine_volume'] = volume
