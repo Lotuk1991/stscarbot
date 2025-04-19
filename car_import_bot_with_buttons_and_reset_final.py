@@ -119,36 +119,31 @@ async def choose_volume(call: types.CallbackQuery):
         # Расчёт
         result, breakdown = calculate_import(user_data[user_id])
 
-        # Форматируем результат
+        # Формируем текст результата
         text_lines = []
         for k, v in breakdown.items():
             if isinstance(v, (int, float)):
                 text_lines.append(f"{k}: ${v:.2f}")
             else:
                 text_lines.append(f"{k}: {v}")
-
         text = "\n".join(text_lines)
         text += f"\n\n*Итоговая сумма:* ${result:.2f}"
 
-            # Кнопки редактирования
-    markup = InlineKeyboardMarkup(row_width=2)
-    markup.add(
-        InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
-        InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
-        InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
-        InlineKeyboardButton("📅 Год", callback_data="edit_year"),
-        InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-        InlineKeyboardButton("📦 Сбросить", callback_data="reset")
-    )
+        # Кнопки редактирования
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+        )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
 
     except Exception as e:
         await call.message.answer(f"Произошла ошибка при расчёте:\n`{e}`", parse_mode="Markdown")
-@dp.callback_query_handler(lambda c: c.data == 'reset')
-async def reset_data(call: types.CallbackQuery):
-    user_data.pop(call.from_user.id, None)
-    await call.message.answer("Начнем заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
 
 # Функция расчета импортных пошлин и стоимости
 
