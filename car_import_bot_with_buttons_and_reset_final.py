@@ -130,6 +130,7 @@ async def choose_volume(call: types.CallbackQuery):
 
 "
     )
+    )
 
     text = header + "
 ".join([f"{k}: ${round(v)}" for k, v in breakdown.items()])
