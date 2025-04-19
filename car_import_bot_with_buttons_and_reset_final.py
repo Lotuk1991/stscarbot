@@ -1,3 +1,22 @@
+from aiogram import Bot, Dispatcher, types, executor
+import json
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+
+API_TOKEN = "YOUR_API_TOKEN"
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher(bot)
+
+with open('iaai_fee_data.json') as f:
+    iaai_fee_data = json.load(f)
+
+with open('copart_fee_data.json') as f:
+    copart_fee_data = json.load(f)
+
+with open('delivery_dict.json') as f:
+    delivery_prices = json.load(f)
+
+user_data = {}
+
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
     user_data[message.chat.id] = {}
