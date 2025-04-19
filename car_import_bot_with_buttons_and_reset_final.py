@@ -1,3 +1,9 @@
+@dp.message_handler(commands=['start'])
+async def start_command(message: types.Message):
+    user_data[message.chat.id] = {}
+    user_data[message.chat.id]["location_page"] = 0
+    await message.answer("Привіт! Обери аукціон (Copart або IAAI):", reply_markup=auction_markup)
+
 from aiogram import Bot, Dispatcher, types, executor
 import json
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
@@ -83,11 +89,6 @@ def calculate_customs(fuel, volume_liters, year, car_price, auction_fee):
         "vat": round(vat, 2),
         "total": round(excise + duty + vat, 2)
     }
-
-@dp.message_handler(commands=['start'])
-async def start_command(message: types.Message):
-    user_data[message.chat.id] = {}
-    await message.answer("Привет! Выбери аукцион (Copart или IAAI):")
 
 @dp.message_handler(lambda msg: msg.chat.id in user_data and 'auction' not in user_data[msg.chat.id])
 async def auction_choice(message: types.Message):
@@ -235,12 +236,6 @@ restart_button = KeyboardButton("🔁 Почати спочатку")
 restart_markup.add(restart_button)
 
 # Обработка команды start
-@dp.message_handler(commands=['start'])
-async def start_command(message: types.Message):
-    user_data[message.chat.id] = {}  # Очистка данных пользователя
-    await message.answer("Привіт! Обери аукціон (Copart або IAAI):", reply_markup=auction_markup)
-
-# Выбор аукциона
 @dp.message_handler(lambda msg: msg.chat.id in user_data and 'auction' not in user_data[msg.chat.id])
 async def auction_choice(message: types.Message):
     auction = message.text.strip().upper()
