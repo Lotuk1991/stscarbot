@@ -332,7 +332,7 @@ async def edit_field_handler(message: types.Message):
         await message.answer("Введи новую стоимость автомобиля:")
     elif text == "📍 Изменить локацию":
         user_data[chat_id].pop("delivery_location", None)
-        await message.answer("Введи новую локацию для доставки:")
+        await message.answer("Введи новую локацию для доставки:", reply_markup=ReplyKeyboardMarkup(resize_keyboard=True).add(*[KeyboardButton(loc) for loc in list(delivery_prices.keys())[:5]]))
     elif text == "⚡ Изменить топливо":
         user_data[chat_id].pop("fuel", None)
         await message.answer("Выбери новый тип топлива:", reply_markup=fuel_markup)
