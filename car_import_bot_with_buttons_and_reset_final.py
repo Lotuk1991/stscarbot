@@ -114,10 +114,28 @@ async def choose_volume(call: types.CallbackQuery):
     volume = float(call.data[4:])
     user_data[call.from_user.id]['engine_volume'] = volume
     result, breakdown = calculate_import(user_data[call.from_user.id])
-    text = "\n".join([f"{k}: ${round(v)}" for k, v in breakdown.items()])
-    text += f"\n\nИтоговая сумма: ${round(result)}"
+    location = user_data[call.from_user.id]['location']
+    volume = user_data[call.from_user.id]['engine_volume']
+    year = user_data[call.from_user.id]['year']
+    fuel = user_data[call.from_user.id]['fuel'].capitalize()
+    
+    header = f"<b>Локация:</b> {location}
+" \
+             f"<b>Объём двигателя:</b> {volume} л
+" \
+             f"<b>Год выпуска:</b> {year}
+" \
+             f"<b>Тип топлива:</b> {fuel}
+
+"
+
+    text = header + "
+".join([f"{k}: ${round(v)}" for k, v in breakdown.items()])
+    text += f"
+
+<b>Итоговая сумма:</b> ${round(result)}"
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
-    await call.message.answer(text, reply_markup=markup)
+    await call.message.answer(text, reply_markup=markup, parse_mode='HTML')
 
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
@@ -136,6 +154,7 @@ def calculate_import(data):
 
     # Таможенная стоимость (цена авто + сбор + доставка в Клайпеду + 1600)
     customs_base = price + auction_fee + 1600
+    invoice_fee = (price + auction_fee + delivery_dict[data['location']]) * 0.05
 
     # Пенсионный фонд: зависит от таможенной стоимости
     if customs_base < 37440:
@@ -162,20 +181,32 @@ def calculate_import(data):
     delivery = data['delivery_price'] + (125 if fuel in ['electric', 'hybrid'] else 0)
     pension = customs_base * pension_percent
 
-    total = price + auction_fee + delivery + import_duty + excise + vat + 350 + 500 + 1000 + 150 + pension + 100
+    total = price + auction_fee + delivery + import_duty + excise + vat + 350 + 500 + 1000 + 150 + pension + 100 + invoice_fee + 500
+
+    tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
+
         'Цена авто': price,
         'Сбор аукциона': auction_fee,
+        'Локация': data['location'],
         'Доставка в Клайпеду': delivery,
+        'Тип топлива': fuel.capitalize(),
+        'Объем двигателя': f"{volume} л",
+        'Год выпуска': year,
         'Ввозная пошлина (10%)': import_duty,
         'Акциз (EUR, пересчитан в USD)': excise,
         'НДС (20%)': vat,
+        'Таможенные платежи (итого)': tamozhnya_total,
         'Экспедитор (Литва)': 350,
         'Брокерские услуги': 500,
         'Доставка в Украину': 1000,
         'Сертификация': 150,
         f'Пенсионный фонд ({int(pension_percent*100)}%)': pension,
+        'МРЭО (постановка на учет)': 100,
+        'Комиссия за оплату инвойса (5%)': invoice_fee,
+        'Услуги компании': 500
+    }%)': pension,
         'МРЭО (постановка на учет)': 100
     }
     return total, breakdown
