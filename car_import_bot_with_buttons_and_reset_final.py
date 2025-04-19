@@ -111,14 +111,43 @@ async def choose_year(call: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
 async def choose_volume(call: types.CallbackQuery):
-    volume = float(call.data[4:])
-    user_data[call.from_user.id]['engine_volume'] = volume
-    result, breakdown = calculate_import(user_data[call.from_user.id])
-    text = "\n".join([f"{k}: ${v:.2f}" for k, v in breakdown.items()])
-    text += f"\n\nИтоговая сумма: ${result:.2f}"
-    markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
-    await call.message.answer(text, reply_markup=markup)
+    try:
+        volume = float(call.data[4:])
+        user_id = call.from_user.id
+        user_data[user_id]['engine_volume'] = volume
 
+        required_fields = ['price', 'fuel', 'year', 'engine_volume', 'auction', 'location', 'delivery_price']
+        missing = [field for field in required_fields if field not in user_data[user_id]]
+
+        if user_data[user_id].get('fuel') == 'electric' and 'battery_capacity' not in user_data[user_id]:
+            missing.append('battery_capacity')
+
+        if missing:
+            await call.message.answer(f"Отсутствуют данные: {', '.join(missing)}. Начни заново с /start.")
+            return
+
+        result, breakdown = calculate_import(user_data[user_id])
+        text = "\n".join([
+            f"{k}: ${v:.2f}" if isinstance(v, (int, float)) else f"{k}: {v}"
+            for k, v in breakdown.items()
+        ])
+        text += f"\n\nИтоговая сумма: ${result:.2f}"
+
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("✏️ Изменить цену", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Изменить локацию", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Изменить топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Изменить год", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Изменить объем", callback_data="edit_volume"),
+            InlineKeyboardButton("🔁 Сбросить", callback_data="reset")
+        )
+
+        await call.message.answer(text, reply_markup=markup)
+
+    except Exception as e:
+        logging.exception("Ошибка при обработке объема двигателя")
+        await call.message.answer("🚫 Что-то пошло не так. Начни заново с /start.")
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
