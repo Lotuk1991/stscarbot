@@ -119,15 +119,17 @@ async def choose_volume(call: types.CallbackQuery):
     year = user_data[call.from_user.id]['year']
     fuel = user_data[call.from_user.id]['fuel'].capitalize()
     
-    header = f"<b>Локация:</b> {location}
-" \
-             f"<b>Объём двигателя:</b> {volume} л
-" \
-             f"<b>Год выпуска:</b> {year}
-" \
-             f"<b>Тип топлива:</b> {fuel}
+    header = (
+        f"<b>Локация:</b> {location}
+"
+        f"<b>Объём двигателя:</b> {volume} л
+"
+        f"<b>Год выпуска:</b> {year}
+"
+        f"<b>Тип топлива:</b> {fuel}
 
 "
+    )
 
     text = header + "
 ".join([f"{k}: ${round(v)}" for k, v in breakdown.items()])
