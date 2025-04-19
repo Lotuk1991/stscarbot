@@ -109,21 +109,20 @@ async def choose_year(call: types.CallbackQuery):
     user_data[call.from_user.id]['year'] = year
     await call.message.answer("Выбери объем двигателя:", reply_markup=get_engine_volume_keyboard())
 
-@dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
+dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
 async def choose_volume(call: types.CallbackQuery):
     volume = float(call.data[4:])
     user_data[call.from_user.id]['engine_volume'] = volume
     result, breakdown = calculate_import(user_data[call.from_user.id])
-
-    text = ""
-    for k, v in breakdown.items():
-        text += f"<b>{k}:</b> ${round(v)}
-"
-    text += f"
-<b>Итоговая сумма:</b> ${round(result)}"
-
+    text = "\n".join([f"{k}: ${round(v)}" for k, v in breakdown.items()])
+    text += f"\n\nИтоговая сумма: ${round(result)}"
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
-    await call.message.answer(text, reply_markup=markup, parse_mode='HTML')
+    await call.message.answer(text, reply_markup=markup)
+
+@dp.callback_query_handler(lambda c: c.data == 'reset')
+async def reset_data(call: types.CallbackQuery):
+    user_data.pop(call.from_user.id, None)
+    await call.message.answer("Начнем заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
 
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
