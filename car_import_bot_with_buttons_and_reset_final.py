@@ -119,22 +119,98 @@ async def paginate_locations(call: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data.startswith('loc_'))
 async def choose_location(call: types.CallbackQuery):
+    user_id = call.from_user.id
     location = call.data[4:]
-    user_data[call.from_user.id]['location'] = location
-    user_data[call.from_user.id]['delivery_price'] = delivery_dict[location]
-    await call.message.answer("Выбери тип топлива:", reply_markup=get_fuel_keyboard())
+    user_data[user_id]['location'] = location
+    user_data[user_id]['delivery_price'] = delivery_dict[location]
+
+    required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+    if all(key in user_data[user_id] for key in required):
+        result, breakdown = calculate_import(user_data[user_id])
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.2f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+        )
+
+        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+    else:
+        await call.message.answer("Выбери тип топлива:", reply_markup=get_fuel_keyboard())
 
 @dp.callback_query_handler(lambda c: c.data in ['gasoline', 'diesel', 'hybrid', 'electric'])
 async def choose_fuel(call: types.CallbackQuery):
-    user_data[call.from_user.id]['fuel'] = call.data
-    await call.message.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
+    user_id = call.from_user.id
+    user_data[user_id]['fuel'] = call.data
 
+    required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+    if all(key in user_data[user_id] for key in required):
+        result, breakdown = calculate_import(user_data[user_id])
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.2f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+        )
+
+        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+    else:
+        await call.message.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
 @dp.callback_query_handler(lambda c: c.data.startswith('year_'))
 async def choose_year(call: types.CallbackQuery):
+    user_id = call.from_user.id
     year = int(call.data[5:])
-    user_data[call.from_user.id]['year'] = year
-    await call.message.answer("Выбери объем двигателя:", reply_markup=get_engine_volume_keyboard())
+    user_data[user_id]['year'] = year
 
+    required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+    if all(key in user_data[user_id] for key in required):
+        result, breakdown = calculate_import(user_data[user_id])
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.2f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+        )
+
+        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+    else:
+        await call.message.answer("Выбери объем двигателя:", reply_markup=get_engine_volume_keyboard())
 @dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
 async def choose_volume(call: types.CallbackQuery):
     try:
