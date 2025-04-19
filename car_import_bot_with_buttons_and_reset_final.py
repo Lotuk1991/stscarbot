@@ -114,9 +114,6 @@ async def choose_volume(call: types.CallbackQuery):
     volume = float(call.data[4:])
     user_data[call.from_user.id]['engine_volume'] = volume
     result, breakdown = calculate_import(user_data[call.from_user.id])
-    
-    )
-
     text = "
 ".join([f"{k}: ${round(v)}" for k, v in breakdown.items()])
     text += f"
