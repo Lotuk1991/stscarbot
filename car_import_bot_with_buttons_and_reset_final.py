@@ -378,28 +378,7 @@ async def edit_field(call: types.CallbackQuery):
     field = field_map.get(action)
     if field:
         user_data[user_id].pop(field, None)
-@dp.callback_query_handler(lambda c: c.data.startswith('edit_'))
-async def edit_field(call: types.CallbackQuery):
-    user_id = call.from_user.id
-    action = call.data
 
-    field_map = {
-        "edit_price": ("Введи новую цену:", "price"),
-        "edit_location": ("Выбери новую локацию:", "location"),
-        "edit_fuel": ("Выбери тип топлива:", "fuel"),
-        "edit_year": ("Выбери год выпуска:", "year"),
-        "edit_volume": ("Выбери объем двигателя:", "engine_volume"),
-        "edit_expeditor": ("Введи сумму за экспедитора:", "expeditor"),
-        "edit_broker": ("Введи сумму за брокерские услуги:", "broker"),
-        "edit_ukraine_delivery": ("Введи стоимость доставки в Украину:", "delivery_ua"),
-        "edit_cert": ("Введи стоимость сертификации:", "cert"),
-        "edit_stscars": ("Введи цену за услуги компании:", "stscars")
-    }
-
-    if action in field_map:
-        prompt, field = field_map[action]
-        await call.message.answer(prompt)
-        user_data[user_id]['edit_field'] = field
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
