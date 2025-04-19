@@ -2,31 +2,6 @@ from aiogram import Bot, Dispatcher, types, executor
 import json
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-API_TOKEN = "YOUR_API_TOKEN"
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
-
-with open('iaai_fee_data.json') as f:
-    iaai_fee_data = json.load(f)
-
-with open('copart_fee_data.json') as f:
-    copart_fee_data = json.load(f)
-
-with open('delivery_dict.json') as f:
-    delivery_prices = json.load(f)
-
-user_data = {}
-
-@dp.message_handler(commands=['start'])
-async def start_command(message: types.Message):
-    user_data[message.chat.id] = {}
-    user_data[message.chat.id]["location_page"] = 0
-    await message.answer("Привіт! Обери аукціон (Copart або IAAI):", reply_markup=auction_markup)
-
-from aiogram import Bot, Dispatcher, types, executor
-import json
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-
 API_TOKEN = '7772557710:AAE9YdvAK3rOr_BEFyV4grUx5l2nf8KybBs'
 
 bot = Bot(token=API_TOKEN)
@@ -108,6 +83,11 @@ def calculate_customs(fuel, volume_liters, year, car_price, auction_fee):
         "vat": round(vat, 2),
         "total": round(excise + duty + vat, 2)
     }
+
+@dp.message_handler(commands=['start'])
+async def start_command(message: types.Message):
+    user_data[message.chat.id] = {}
+    await message.answer("Привет! Выбери аукцион (Copart или IAAI):")
 
 @dp.message_handler(lambda msg: msg.chat.id in user_data and 'auction' not in user_data[msg.chat.id])
 async def auction_choice(message: types.Message):
@@ -228,7 +208,6 @@ async def show_calculations(message):
     )
 
     await message.answer(response, parse_mode="Markdown")
-    await message.answer("Что хотите изменить?", reply_markup=edit_markup)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
@@ -255,6 +234,12 @@ restart_button = KeyboardButton("🔁 Почати спочатку")
 restart_markup.add(restart_button)
 
 # Обработка команды start
+@dp.message_handler(commands=['start'])
+async def start_command(message: types.Message):
+    user_data[message.chat.id] = {}  # Очистка данных пользователя
+    await message.answer("Привіт! Обери аукціон (Copart або IAAI):", reply_markup=auction_markup)
+
+# Выбор аукциона
 @dp.message_handler(lambda msg: msg.chat.id in user_data and 'auction' not in user_data[msg.chat.id])
 async def auction_choice(message: types.Message):
     auction = message.text.strip().upper()
@@ -321,89 +306,3 @@ async def delivery_location_handler(message: types.Message):
 async def restart_handler(message: types.Message):
     user_data[message.chat.id] = {}
     await start_command(message)
-
-
-
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-
-# Клавиатура для редактирования
-edit_markup = ReplyKeyboardMarkup(resize_keyboard=True)
-edit_markup.add(
-    KeyboardButton("✏️ Изменить цену"),
-    KeyboardButton("📍 Изменить локацию"),
-    KeyboardButton("⚡ Изменить топливо"),
-    KeyboardButton("📅 Изменить год"),
-    KeyboardButton("🛠 Изменить объем"),
-    KeyboardButton("📦 Сбросить")
-)
-
-@dp.message_handler(lambda msg: msg.text.startswith("✏️") or msg.text.startswith("📍") or msg.text.startswith("⚡") or msg.text.startswith("📅") or msg.text.startswith("🛠") or msg.text.startswith("📦"))
-async def edit_field_handler(message: types.Message):
-    chat_id = message.chat.id
-    text = message.text.strip()
-
-    if text == "✏️ Изменить цену":
-        user_data[chat_id].pop("price", None)
-        await message.answer("Введи новую стоимость автомобиля:")
-    elif text == "📍 Изменить локацию":
-        user_data[chat_id].pop("delivery_location", None)
-        await message.answer("Введи новую локацию для доставки:", reply_markup=ReplyKeyboardMarkup(resize_keyboard=True).add(*[KeyboardButton(loc) for loc in list(delivery_prices.keys())[:5]]))
-    elif text == "⚡ Изменить топливо":
-        user_data[chat_id].pop("fuel", None)
-        await message.answer("Вибери новий тип пального:", reply_markup=fuel_markup)
-    elif text == "📅 Изменить год":
-        user_data[chat_id].pop("year", None)
-        await message.answer("Выбери новый год выпуска:", reply_markup=year_markup)
-    elif text == "🛠 Изменить объем":
-        user_data[chat_id].pop("volume", None)
-        await message.answer("Выбери новый объем двигателя:", reply_markup=volume_markup)
-    elif text == "📦 Сбросить":
-        user_data[chat_id] = {}
-        await message.answer("Данные сброшены. Начнем сначала. Выбери аукцион:", reply_markup=auction_markup)
-
-
-
-@dp.message_handler(lambda msg: msg.text == "⬅️ Назад" or msg.text == "➡️ Далі")
-async def paginate_locations(message: types.Message):
-    chat_id = message.chat.id
-    current_page = user_data[chat_id].get("location_page", 0)
-    per_page = 20
-    locations = list(delivery_prices.keys())
-
-    if message.text == "➡️ Далі":
-        current_page += 1
-    elif message.text == "⬅️ Назад":
-        current_page -= 1
-
-    current_page = max(0, min(current_page, len(locations) // per_page))
-    user_data[chat_id]["location_page"] = current_page
-
-    start = current_page * per_page
-    end = start + per_page
-    page_locations = locations[start:end]
-
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    for loc in page_locations:
-        markup.add(KeyboardButton(loc))
-
-    nav_buttons = []
-    if current_page > 0:
-        nav_buttons.append(KeyboardButton("⬅️ Назад"))
-    if end < len(locations):
-        nav_buttons.append(KeyboardButton("➡️ Далі"))
-    if nav_buttons:
-        markup.add(*nav_buttons)
-
-    await message.answer("Оберіть локацію для доставки:", reply_markup=markup)
-
-@dp.message_handler(lambda msg: msg.chat.id in user_data and 'volume' in user_data[msg.chat.id] and 'delivery_location' not in user_data[msg.chat.id])
-async def delivery_location_paginated(message: types.Message):
-    chat_id = message.chat.id
-    if message.text in delivery_prices:
-        user_data[chat_id]["delivery_location"] = message.text
-        user_data[chat_id]["delivery_price"] = delivery_prices[message.text]
-        await message.answer(f"Вибрана площадка: {message.text}\nВартість доставки до Клайпеди: ${delivery_prices[message.text]}")
-        await message.answer("Оберіть тип пального:", reply_markup=fuel_markup)
-    else:
-        user_data[chat_id]["location_page"] = 0
-        await paginate_locations(message)
