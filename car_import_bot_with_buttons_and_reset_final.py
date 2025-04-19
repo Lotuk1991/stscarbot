@@ -61,7 +61,7 @@ def get_year_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
     for year in range(2010, 2026):
         markup.add(InlineKeyboardButton(str(year), callback_data=f"year_{year}"))
-    return markup
+    return markup  # Возвращаем пустую клавиатуру, чтобы не отображались года
 
 def get_engine_volume_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
@@ -172,13 +172,13 @@ def calculate_import(data):
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
-        'Цена авто': price,
-        'Сбор аукциона': auction_fee,
-        'Локация': data['location'],
-        'Доставка в Клайпеду': delivery,
         'Тип топлива': fuel.capitalize(),
         'Объем двигателя': f"{volume} л",
         'Год выпуска': year,
+        'Локация': data['location'],
+        'Цена авто': price,
+        'Сбор аукциона': auction_fee,
+        'Доставка в Клайпеду': delivery,
         'Ввозная пошлина (10%)': import_duty,
         'Акциз (EUR, пересчитан в USD)': excise,
         'НДС (20%)': vat,
@@ -187,10 +187,11 @@ def calculate_import(data):
         'Брокерские услуги': 500,
         'Доставка в Украину': 1000,
         'Сертификация': 150,
-        f'Пенсионный фонд ({int(pension_percent*100)}%)': pension,
-        'МРЭО (постановка на учет)': 100,
+        f'Пенсионный фонд ({int(pension_percent*100),
         'Комиссия за оплату инвойса (5%)': invoice_fee,
         'Услуги компании': 500
+    }%)': pension,
+        'МРЭО (постановка на учет)': 100
     }
     return total, breakdown
 
