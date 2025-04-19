@@ -118,11 +118,7 @@ async def choose_volume(call: types.CallbackQuery):
     text += f"\n\nИтоговая сумма: ${result:.2f}"
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
     await call.message.answer(text, reply_markup=markup)
-
-@dp.callback_query_handler(lambda c: c.data == 'reset')
-async def reset_data(call: types.CallbackQuery):
-    user_data.pop(call.from_user.id, None)
-    await call.message.answer("Начнем заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
+    
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
