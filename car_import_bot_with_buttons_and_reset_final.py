@@ -115,8 +115,9 @@ async def choose_volume(call: types.CallbackQuery):
     user_data[call.from_user.id]['engine_volume'] = volume
     result, breakdown = calculate_import(user_data[call.from_user.id])
 
+    text_lines = [f"<b>{k}:</b> ${round(v)}" for k, v in breakdown.items()]
     text = "
-".join([f"<b>{k}:</b> ${round(v)}" for k, v in breakdown.items()])
+".join(text_lines)
     text += f"
 
 <b>Итоговая сумма:</b> ${round(result)}"
@@ -189,11 +190,10 @@ def calculate_import(data):
         'Брокерские услуги': 500,
         'Доставка в Украину': 1000,
         'Сертификация': 150,
-        'Пенсионный фонд ({int(pension_percent*100)}%)': pension,
+        f'Пенсионный фонд ({int(pension_percent*100)}%)': pension,
         'МРЭО (постановка на учет)': 100,
         'Комиссия за оплату инвойса (5%)': invoice_fee,
-        'Услуги компании': 500,
-        'МРЭО (постановка на учет)': 100
+        'Услуги компании': 500
     }
     return total, breakdown
 
@@ -208,3 +208,4 @@ def get_auction_fee(auction, price):
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
+
