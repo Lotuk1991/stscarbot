@@ -83,9 +83,9 @@ async def choose_auction(call: types.CallbackQuery):
 
 @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def enter_price(msg: types.Message):
-
+    user_id = msg.from_user.id
     user_data[user_id]['price'] = float(msg.text)
-    # Если все данные есть — пересчёт
+
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
