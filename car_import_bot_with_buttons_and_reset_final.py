@@ -112,9 +112,6 @@ async def enter_price(msg: types.Message):
         await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
         await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
-    user_data[msg.from_user.id]['price'] = float(msg.text)
-    await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
-
 @dp.callback_query_handler(lambda c: c.data.startswith('page_'))
 async def paginate_locations(call: types.CallbackQuery):
     page = int(call.data.split('_')[1])
