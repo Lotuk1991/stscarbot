@@ -81,7 +81,6 @@ async def choose_auction(call: types.CallbackQuery):
     user_data[call.from_user.id]['auction'] = call.data
     await call.message.answer("Введи цену автомобиля в долларах:")
 
-@dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def enter_price(msg: types.Message):
     user_id = msg.from_user.id
 
@@ -405,6 +404,7 @@ async def edit_field(call: types.CallbackQuery):
 async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
     await call.message.answer("Начнём заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
+
 @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
@@ -444,9 +444,6 @@ async def handle_numeric_input(msg: types.Message):
             await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
         else:
             await msg.answer("Поле обновлено.")
-
 # === Запуск бота ===
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
