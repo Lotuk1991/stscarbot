@@ -208,6 +208,7 @@ async def show_calculations(message):
     )
 
     await message.answer(response, parse_mode="Markdown")
+    await message.answer("Что хотите изменить?", reply_markup=edit_markup)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
@@ -237,7 +238,7 @@ restart_markup.add(restart_button)
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
     user_data[message.chat.id] = {}  # Очистка данных пользователя
-    await message.answer("Привіт! Обери аукціон (Copart або IAAI):", reply_markup=auction_markup)
+    await message.answer("Привіт! Обери аукціон (Copart або IAAI):", reply_markup=auction_markup):", reply_markup=auction_markup)
 
 # Выбор аукциона
 @dp.message_handler(lambda msg: msg.chat.id in user_data and 'auction' not in user_data[msg.chat.id])
@@ -335,7 +336,7 @@ async def edit_field_handler(message: types.Message):
         await message.answer("Введи новую локацию для доставки:", reply_markup=ReplyKeyboardMarkup(resize_keyboard=True).add(*[KeyboardButton(loc) for loc in list(delivery_prices.keys())[:5]]))
     elif text == "⚡ Изменить топливо":
         user_data[chat_id].pop("fuel", None)
-        await message.answer("Выбери новый тип топлива:", reply_markup=fuel_markup)
+        await message.answer("Вибери новий тип пального:", reply_markup=fuel_markup)
     elif text == "📅 Изменить год":
         user_data[chat_id].pop("year", None)
         await message.answer("Выбери новый год выпуска:", reply_markup=year_markup)
