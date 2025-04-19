@@ -369,12 +369,17 @@ async def edit_field(call: types.CallbackQuery):
         await call.message.answer("Выбери объем двигателя:", reply_markup=get_engine_volume_keyboard())
 
     field_map = {
-        "edit_price": "price",
-        "edit_location": "location",
-        "edit_fuel": "fuel",
-        "edit_year": "year",
-        "edit_volume": "engine_volume"
-    }
+    "edit_price": ("Введи новую цену:", "price"),
+    "edit_location": ("Выбери новую локацию:", "location"),
+    "edit_fuel": ("Выбери тип топлива:", "fuel"),
+    "edit_year": ("Выбери год выпуска:", "year"),
+    "edit_volume": ("Выбери объем двигателя:", "engine_volume"),
+    "edit_expeditor": ("Введи сумму за экспедитора:", "expeditor"),
+    "edit_broker": ("Введи сумму за брокерские услуги:", "broker"),
+    "edit_ukraine_delivery": ("Введи стоимость доставки в Украину:", "delivery_ua"),
+    "edit_cert": ("Введи стоимость сертификации:", "cert"),
+    "edit_stscars": ("Введи цену за услуги компании:", "stscars")
+}
     field = field_map.get(action)
     if field:
         user_data[user_id].pop(field, None)
