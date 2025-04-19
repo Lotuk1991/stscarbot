@@ -18,6 +18,7 @@ dp = Dispatcher(bot)
 
 # Хранилище пользовательских данных
 user_data = defaultdict(dict)
+user_state = defaultdict(str)  # для отслеживания этапов
 
 # Загрузка данных
 with open('delivery_dict.json', 'r') as f:
@@ -74,6 +75,7 @@ def get_engine_volume_keyboard():
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     user_data[message.from_user.id] = {}
+    user_state[message.from_user.id] = ''
     await message.answer("Привет! Выбери аукцион:", reply_markup=get_auction_keyboard())
 
 @dp.callback_query_handler(lambda c: c.data in ['copart', 'iaai'])
@@ -82,9 +84,15 @@ async def choose_auction(call: types.CallbackQuery):
     await call.message.answer("Введи цену автомобиля в долларах:")
 
 @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
-async def enter_price(msg: types.Message):
-    user_data[msg.from_user.id]['price'] = float(msg.text)
-    await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
+async def handle_price_or_battery(msg: types.Message):
+    user_id = msg.from_user.id
+    if user_state[user_id] == 'waiting_for_battery':
+        user_data[user_id]['battery_capacity'] = float(msg.text)
+        user_state[user_id] = ''  # сброс состояния
+        await msg.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
+    else:
+        user_data[user_id]['price'] = float(msg.text)
+        await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
 
 @dp.callback_query_handler(lambda c: c.data.startswith('page_'))
 async def paginate_locations(call: types.CallbackQuery):
@@ -100,8 +108,13 @@ async def choose_location(call: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data in ['gasoline', 'diesel', 'hybrid', 'electric'])
 async def choose_fuel(call: types.CallbackQuery):
-    user_data[call.from_user.id]['fuel'] = call.data
-    await call.message.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
+    fuel = call.data
+    user_data[call.from_user.id]['fuel'] = fuel
+    if fuel == 'electric':
+        user_state[call.from_user.id] = 'waiting_for_battery'
+        await call.message.answer("Введи емкость батареи в кВт⋅ч:")
+    else:
+        await call.message.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
 
 @dp.callback_query_handler(lambda c: c.data.startswith('year_'))
 async def choose_year(call: types.CallbackQuery):
@@ -118,6 +131,9 @@ async def choose_volume(call: types.CallbackQuery):
 
         required_fields = ['price', 'fuel', 'year', 'engine_volume', 'auction', 'location', 'delivery_price']
         missing = [field for field in required_fields if field not in user_data[user_id]]
+        if user_data[user_id].get('fuel') == 'electric' and 'battery_capacity' not in user_data[user_id]:
+            missing.append('battery_capacity')
+
         if missing:
             await call.message.answer(f"Отсутствуют данные: {', '.join(missing)}. Начни заново с /start.")
             return
@@ -150,6 +166,7 @@ async def choose_volume(call: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
+    user_state.pop(call.from_user.id, None)
     await call.message.answer("Начнем заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
 
 # Функция расчета импортных пошлин и стоимости
@@ -159,7 +176,7 @@ def calculate_import(data):
     volume = data['engine_volume']
     year = data['year']
     fuel = data['fuel']
-    age = 2025 - year
+    age = max(1, 2025 - year - 1)
     auction_fee = get_auction_fee(data['auction'], price)
 
     # Таможенная стоимость (цена авто + сбор + доставка в Клайпеду + 1600)
@@ -176,12 +193,11 @@ def calculate_import(data):
 
     # Акциз
     if fuel == 'electric':
-        excise_eur = 1 * age
-    elif fuel == 'hybrid':
-        excise_eur = 100 * volume
+        battery_capacity = data.get('battery_capacity', 0)
+        excise_eur = battery_capacity * 1
     else:
-        rate = 75 if fuel == 'gasoline' else 150
-        excise_eur = rate * volume * age
+        base_rate = 50 if fuel in ['gasoline', 'hybrid'] else 75
+        excise_eur = base_rate * volume * age
 
     euro_to_usd_fixed = 1.1
     excise = excise_eur * euro_to_usd_fixed
