@@ -114,25 +114,10 @@ async def choose_volume(call: types.CallbackQuery):
     volume = float(call.data[4:])
     user_data[call.from_user.id]['engine_volume'] = volume
     result, breakdown = calculate_import(user_data[call.from_user.id])
-    location = user_data[call.from_user.id]['location']
-    volume = user_data[call.from_user.id]['engine_volume']
-    year = user_data[call.from_user.id]['year']
-    fuel = user_data[call.from_user.id]['fuel'].capitalize()
     
-    header = (
-        f"<b>Локация:</b> {location}
-"
-        f"<b>Объём двигателя:</b> {volume} л
-"
-        f"<b>Год выпуска:</b> {year}
-"
-        f"<b>Тип топлива:</b> {fuel}
-
-"
-    )
     )
 
-    text = header + "
+    text = "
 ".join([f"{k}: ${round(v)}" for k, v in breakdown.items()])
     text += f"
 
