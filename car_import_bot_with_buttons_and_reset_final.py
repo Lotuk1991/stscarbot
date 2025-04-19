@@ -82,15 +82,17 @@ async def choose_auction(call: types.CallbackQuery):
     await call.message.answer("Введи цену автомобиля в долларах:")
 
 @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
+async def enter_price(msg: types.Message):
+    user_id = msg.from_user.id
+
     # Проверка на редактируемое поле
     if 'edit_field' in user_data[user_id]:
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = float(msg.text)
-async def enter_price(msg: types.Message):
-    user_id = msg.from_user.id
-    user_data[user_id]['price'] = float(msg.text)
+    else:
+        user_data[user_id]['price'] = float(msg.text)
 
-    # Если у пользователя уже есть всё остальное — сразу считаем
+    # Если все данные есть — пересчёт
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
@@ -110,12 +112,12 @@ async def enter_price(msg: types.Message):
             InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Год", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
             InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
         )
 
         await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
