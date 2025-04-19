@@ -154,7 +154,12 @@ async def choose_location(call: types.CallbackQuery):
             InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Год", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
+            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
@@ -185,7 +190,12 @@ async def choose_fuel(call: types.CallbackQuery):
             InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Год", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
+            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
@@ -216,7 +226,12 @@ async def choose_year(call: types.CallbackQuery):
             InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Год", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
+            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
@@ -250,7 +265,12 @@ async def choose_volume(call: types.CallbackQuery):
             InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Год", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
+            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
