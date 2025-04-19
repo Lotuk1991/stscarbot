@@ -111,19 +111,35 @@ async def choose_year(call: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
 async def choose_volume(call: types.CallbackQuery):
-    volume = float(call.data[4:])
-    user_data[call.from_user.id]['engine_volume'] = volume
-    result, breakdown = calculate_import(user_data[call.from_user.id])
-    text = "\n".join([f"{k}: ${v:.2f}" for k, v in breakdown.items()])
-    text += f"\n\nИтоговая сумма: ${result:.2f}"
-    markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
-    await call.message.answer(text, reply_markup=markup)
+    try:
+        volume = float(call.data[4:])
+        user_id = call.from_user.id
+        user_data[user_id]['engine_volume'] = volume
 
+        # Расчёт
+        result, breakdown = calculate_import(user_data[user_id])
 
-@dp.callback_query_handler(lambda c: c.data == 'reset')
-async def reset_data(call: types.CallbackQuery):
-    user_data.pop(call.from_user.id, None)
-    await call.message.answer("Начнем заново. Выбери аукцион:", reply_markup=get_auction_keyboard())
+        # Форматируем результат
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.2f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+
+        text = "\n".join(text_lines)
+        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+
+        # Кнопка сброса
+        markup = InlineKeyboardMarkup().add(
+            InlineKeyboardButton("🔁 Сбросить", callback_data="reset")
+        )
+
+        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+
+    except Exception as e:
+        await call.message.answer(f"Произошла ошибка при расчёте:\n`{e}`", parse_mode="Markdown")
+
 
 # Функция расчета импортных пошлин и стоимости
 
