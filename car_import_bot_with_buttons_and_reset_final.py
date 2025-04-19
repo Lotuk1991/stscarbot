@@ -82,6 +82,10 @@ async def choose_auction(call: types.CallbackQuery):
     await call.message.answer("Введи цену автомобиля в долларах:")
 
 @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
+    # Проверка на редактируемое поле
+    if 'edit_field' in user_data[user_id]:
+        field = user_data[user_id].pop('edit_field')
+        user_data[user_id][field] = float(msg.text)
 async def enter_price(msg: types.Message):
     user_id = msg.from_user.id
     user_data[user_id]['price'] = float(msg.text)
@@ -106,6 +110,11 @@ async def enter_price(msg: types.Message):
             InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Год", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
             InlineKeyboardButton("📦 Сбросить", callback_data="reset")
         )
 
@@ -250,6 +259,11 @@ async def choose_volume(call: types.CallbackQuery):
 # Функция расчета импортных пошлин и стоимости
 
 def calculate_import(data):
+    expeditor = data.get('expeditor', 350)
+    broker = data.get('broker', 500)
+    delivery_ua = data.get('delivery_ua', 1000)
+    cert = data.get('cert', 150)
+    stscars = data.get('stscars', 500)
     price = data['price']
     volume = data['engine_volume']
     year = data['year']
@@ -286,8 +300,8 @@ def calculate_import(data):
     delivery = data['delivery_price'] + (125 if fuel in ['electric', 'hybrid'] else 0)
     pension = customs_base * pension_percent
 
-    total = price + auction_fee + delivery + import_duty + excise + vat + 350 + 500 + 1000 + 150 + pension + 100 + invoice_fee + 500
-
+    total = price + auction_fee + delivery + import_duty + excise + vat + \
+         expeditor + broker + delivery_ua + cert + pension + 100 + invoice_fee + stscars
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
@@ -349,6 +363,28 @@ async def edit_field(call: types.CallbackQuery):
     field = field_map.get(action)
     if field:
         user_data[user_id].pop(field, None)
+@dp.callback_query_handler(lambda c: c.data.startswith('edit_'))
+async def edit_field(call: types.CallbackQuery):
+    user_id = call.from_user.id
+    action = call.data
+
+    field_map = {
+        "edit_price": ("Введи новую цену:", "price"),
+        "edit_location": ("Выбери новую локацию:", "location"),
+        "edit_fuel": ("Выбери тип топлива:", "fuel"),
+        "edit_year": ("Выбери год выпуска:", "year"),
+        "edit_volume": ("Выбери объем двигателя:", "engine_volume"),
+        "edit_expeditor": ("Введи сумму за экспедитора:", "expeditor"),
+        "edit_broker": ("Введи сумму за брокерские услуги:", "broker"),
+        "edit_ukraine_delivery": ("Введи стоимость доставки в Украину:", "delivery_ua"),
+        "edit_cert": ("Введи стоимость сертификации:", "cert"),
+        "edit_stscars": ("Введи цену за услуги компании:", "stscars")
+    }
+
+    if action in field_map:
+        prompt, field = field_map[action]
+        await call.message.answer(prompt)
+        user_data[user_id]['edit_field'] = field
 @dp.callback_query_handler(lambda c: c.data == 'reset')
 async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
