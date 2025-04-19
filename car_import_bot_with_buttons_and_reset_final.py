@@ -122,14 +122,6 @@ async def choose_volume(call: types.CallbackQuery):
 <b>Итоговая сумма:</b> ${round(result)}"
 
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
-        text = ""
-    for k, v in breakdown.items():
-        text += f"<b>{k}:</b> ${round(v)}
-"
-    text += f"
-<b>Итоговая сумма:</b> ${round(result)}"
-
-    markup = InlineKeyboardMarkup().add(InlineKeyboardButton("🔁 Сбросить", callback_data="reset"))
     await call.message.answer(text, reply_markup=markup, parse_mode='HTML')
 
 @dp.callback_query_handler(lambda c: c.data == 'reset')
