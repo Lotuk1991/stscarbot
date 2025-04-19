@@ -81,8 +81,8 @@ async def choose_auction(call: types.CallbackQuery):
     user_data[call.from_user.id]['auction'] = call.data
     await call.message.answer("Введи цену автомобиля в долларах:")
 
+@dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def enter_price(msg: types.Message):
-    user_id = msg.from_user.id
 
     user_data[user_id]['price'] = float(msg.text)
     # Если все данные есть — пересчёт
