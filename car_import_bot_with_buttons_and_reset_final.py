@@ -119,7 +119,7 @@ async def choose_location(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
         )
 
@@ -156,7 +156,7 @@ async def choose_fuel(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
         )
 
@@ -193,7 +193,7 @@ async def choose_year(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
         )
 
@@ -233,7 +233,7 @@ async def choose_volume(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
         )
 
@@ -408,7 +408,7 @@ async def handle_numeric_input(msg: types.Message):
                 InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
                 InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
                 InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
-                InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+                InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
                 InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
             )
 
