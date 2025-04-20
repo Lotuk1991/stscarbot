@@ -429,13 +429,13 @@ async def handle_numeric_input(msg: types.Message):
             if all(key in user_data[user_id] for key in required):
                 result, breakdown = calculate_import(user_data[user_id])
                 text_lines = []
-                for k, v in breakdown.items():
+for k, v in breakdown.items():
     if "Год выпуска" in k or "Рік випуску" in k:
         text_lines.append(f"{k}: {v}")
     elif isinstance(v, (int, float)):
         text_lines.append(f"{k}: ${v:,.0f}")
     else:
-        text_lines.append(f"{k}: {v}"){v}")
+        text_lines.append(f"{k}: {v}")
                 text = "\n".join(text_lines)
                 text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
