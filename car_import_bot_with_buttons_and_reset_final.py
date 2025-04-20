@@ -114,13 +114,13 @@ async def choose_location(call: types.CallbackQuery):
             InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Год", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
             InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
-            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
@@ -151,13 +151,13 @@ async def choose_fuel(call: types.CallbackQuery):
             InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Год", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
             InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
-            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
@@ -188,13 +188,13 @@ async def choose_year(call: types.CallbackQuery):
             InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Год", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
             InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
-            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
@@ -234,13 +234,13 @@ async def choose_volume(call: types.CallbackQuery):
             InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Год", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
             InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
-            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
@@ -401,19 +401,19 @@ async def handle_numeric_input(msg: types.Message):
 
                 markup = InlineKeyboardMarkup(row_width=2)
                 markup.add(
-                    InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
-                    InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
-                    InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
-                    InlineKeyboardButton("📅 Год", callback_data="edit_year"),
-                    InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-                    InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
-                    InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
-                    InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-                    InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
-                    InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
-                    InlineKeyboardButton("✏️ Услуги компанії", callback_data="edit_stscars"),
-                    InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
-                )
+            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+        )
                 await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
         else:
             # Если это не один из этапов — просто обновим и посчитаем заново
@@ -431,19 +431,19 @@ async def handle_numeric_input(msg: types.Message):
 
                 markup = InlineKeyboardMarkup(row_width=2)
                 markup.add(
-                    InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
-                    InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
-                    InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
-                    InlineKeyboardButton("📅 Год", callback_data="edit_year"),
-                    InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-                    InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
-                    InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
-                    InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-                    InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
-                    InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
-                    InlineKeyboardButton("✏️ Услуги компанії", callback_data="edit_stscars"),
-                    InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
-                )
+            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+        )
                 await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
 # === Запуск бота ===
 if __name__ == '__main__':
