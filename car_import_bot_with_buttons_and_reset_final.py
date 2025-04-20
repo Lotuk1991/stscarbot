@@ -211,17 +211,21 @@ async def choose_volume(call: types.CallbackQuery):
         result, breakdown = calculate_import(user_data[user_id])
 
         # Формируем текст результата
-        text_lines = []
-for k, v in breakdown.items():
-    if "Год выпуска" in k or "Рік випуску" in k:
-        text_lines.append(f"{k}: {v}")
-    elif isinstance(v, (int, float)):
-        text_lines.append(f"{k}: ${v:,.0f}")
-    else:
-        text_lines.append(f"{k}: {v}")
-        text = "\n".join(text_lines)
-        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
-
+                # Формируем текст результата
+        try:
+            text_lines = []
+            for k, v in breakdown.items():
+                if "Год выпуска" in k or "Рік випуску" in k:
+                    text_lines.append(f"{k}: {v}")
+                elif isinstance(v, (int, float)):
+                    text_lines.append(f"{k}: ${v:,.0f}")
+                else:
+                    text_lines.append(f"{k}: {v}")
+            text = "\n".join(text_lines)
+            text += f"\n\n*Итоговая сумма:* ${result:,.0f}"
+        except Exception as e:
+            await call.message.answer(f"Ошибка при форматировании результата:\n{e}")
+            return
         # Кнопки редактирования
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
