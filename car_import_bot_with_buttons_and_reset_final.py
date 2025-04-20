@@ -97,32 +97,31 @@ async def choose_location(call: types.CallbackQuery):
 
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
-    result, breakdown = calculate_import(user_data[user_id])
-    text_lines = []
-    for k, v in breakdown.items():
-        if "Год выпуска" in k or "Рік випуску" in k:
-            text_lines.append(f"{k}: {v}")
-        elif isinstance(v, (int, float)):
-            text_lines.append(f"{k}: ${v:,.0f}")
-        else:
-            text_lines.append(f"{k}: {v}")
-    text = "\n".join(text_lines)
-    text += f"\n\n*Итоговая сумма:* ${result:,.0f}"
+        result, breakdown = calculate_import(user_data[user_id])
+        text_lines = []
+        for k, v in breakdown.items():
+            if "Год выпуска" in k or "Рік випуску" in k:
+                text_lines.append(f"{k}: {v}")
+            elif isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:,.0f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Итоговая сумма:* ${result:,.0f}"
 
-    markup = InlineKeyboardMarkup(row_width=2)
-    markup.add(
-        InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
-        InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
-        InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
-        InlineKeyboardButton("📅 Год", callback_data="edit_year"),
-        InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-        InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf"),
-        InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
-    )
-
-    await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
-else:
-    await call.message.answer("Выбери тип топлива:", reply_markup=get_fuel_keyboard())
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+        )
+        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+    else:
+        await call.message.answer("Выбери тип топлива:", reply_markup=get_fuel_keyboard())
 
 @dp.callback_query_handler(lambda c: c.data in ['gasoline', 'diesel', 'hybrid', 'electric'])
 async def choose_fuel(call: types.CallbackQuery):
