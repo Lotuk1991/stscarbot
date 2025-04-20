@@ -101,7 +101,7 @@ async def choose_location(call: types.CallbackQuery):
         text_lines = []
         for k, v in breakdown.items():
             if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.2f}")
+                text_lines.append(f"{k}: ${v:.0f}")
             else:
                 text_lines.append(f"{k}: {v}")
         text = "\n".join(text_lines)
