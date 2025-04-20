@@ -105,7 +105,7 @@ async def choose_location(call: types.CallbackQuery):
             else:
                 text_lines.append(f"{k}: {v}")
         text = "\n".join(text_lines)
-        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+        text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
@@ -138,11 +138,11 @@ async def choose_fuel(call: types.CallbackQuery):
         text_lines = []
         for k, v in breakdown.items():
             if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.2f}")
+                text_lines.append(f"{k}: ${v:.0f}")
             else:
                 text_lines.append(f"{k}: {v}")
         text = "\n".join(text_lines)
-        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+        text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
@@ -175,11 +175,11 @@ async def choose_year(call: types.CallbackQuery):
         text_lines = []
         for k, v in breakdown.items():
             if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.2f}")
+                text_lines.append(f"{k}: ${v:.0f}")
             else:
                 text_lines.append(f"{k}: {v}")
         text = "\n".join(text_lines)
-        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+        text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
@@ -393,11 +393,11 @@ async def handle_numeric_input(msg: types.Message):
                 text_lines = []
                 for k, v in breakdown.items():
                     if isinstance(v, (int, float)):
-                        text_lines.append(f"{k}: ${v:.2f}")
+                        text_lines.append(f"{k}: ${v:.0f}")
                     else:
                         text_lines.append(f"{k}: {v}")
                 text = "\n".join(text_lines)
-                text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+                text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
                 markup = InlineKeyboardMarkup(row_width=2)
                 markup.add(
@@ -423,11 +423,11 @@ async def handle_numeric_input(msg: types.Message):
                 text_lines = []
                 for k, v in breakdown.items():
                     if isinstance(v, (int, float)):
-                        text_lines.append(f"{k}: ${v:.2f}")
+                        text_lines.append(f"{k}: ${v:.0f}")
                     else:
                         text_lines.append(f"{k}: {v}")
                 text = "\n".join(text_lines)
-                text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+                text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
                 markup = InlineKeyboardMarkup(row_width=2)
                 markup.add(
