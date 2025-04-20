@@ -301,6 +301,7 @@ def calculate_import(data):
         'Сбор аукциона': auction_fee,
         'Локация': data['location'],
         'Доставка в Клайпеду': delivery,
+        'Комиссия за оплату инвойса (5%)': invoice_fee,
         'Тип топлива': fuel.capitalize(),
         'Объем двигателя': f"{volume} л",
         'Год выпуска': year,
@@ -314,7 +315,6 @@ def calculate_import(data):
         'Сертификация': cert,
         f'Пенсионный фонд ({int(pension_percent*100)}%)': pension,
         'МРЭО (постановка на учет)': 100,
-        'Комиссия за оплату инвойса (5%)': invoice_fee,
         'Услуги компании': stscars,
     }
     return total, breakdown
