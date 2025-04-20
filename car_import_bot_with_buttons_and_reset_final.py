@@ -100,10 +100,12 @@ async def choose_location(call: types.CallbackQuery):
         result, breakdown = calculate_import(user_data[user_id])
         text_lines = []
         for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
+    if "Год выпуска" in k or "Рік випуску" in k:
+        text_lines.append(f"{k}: {v}")
+    elif isinstance(v, (int, float)):
+        text_lines.append(f"{k}: ${v:,.0f}")
+    else:
+        text_lines.append(f"{k}: {v}")
         text = "\n".join(text_lines)
         text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
@@ -137,10 +139,12 @@ async def choose_fuel(call: types.CallbackQuery):
         result, breakdown = calculate_import(user_data[user_id])
         text_lines = []
         for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
+    if "Год выпуска" in k or "Рік випуску" in k:
+        text_lines.append(f"{k}: {v}")
+    elif isinstance(v, (int, float)):
+        text_lines.append(f"{k}: ${v:,.0f}")
+    else:
+        text_lines.append(f"{k}: {v}")
         text = "\n".join(text_lines)
         text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
@@ -174,10 +178,12 @@ async def choose_year(call: types.CallbackQuery):
         result, breakdown = calculate_import(user_data[user_id])
         text_lines = []
         for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
+    if "Год выпуска" in k or "Рік випуску" in k:
+        text_lines.append(f"{k}: {v}")
+    elif isinstance(v, (int, float)):
+        text_lines.append(f"{k}: ${v:,.0f}")
+    else:
+        text_lines.append(f"{k}: {v}")
         text = "\n".join(text_lines)
         text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
@@ -392,10 +398,12 @@ async def handle_numeric_input(msg: types.Message):
                 result, breakdown = calculate_import(user_data[user_id])
                 text_lines = []
                 for k, v in breakdown.items():
-                    if isinstance(v, (int, float)):
-                        text_lines.append(f"{k}: ${v:.0f}")
-                    else:
-                        text_lines.append(f"{k}: {v}")
+    if "Год выпуска" in k or "Рік випуску" in k:
+        text_lines.append(f"{k}: {v}")
+    elif isinstance(v, (int, float)):
+        text_lines.append(f"{k}: ${v:,.0f}")
+    else:
+        text_lines.append(f"{k}: {v}")
                 text = "\n".join(text_lines)
                 text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
@@ -422,10 +430,12 @@ async def handle_numeric_input(msg: types.Message):
                 result, breakdown = calculate_import(user_data[user_id])
                 text_lines = []
                 for k, v in breakdown.items():
-                    if isinstance(v, (int, float)):
-                        text_lines.append(f"{k}: ${v:.0f}")
-                    else:
-                        text_lines.append(f"{k}: {v}")
+    if "Год выпуска" in k or "Рік випуску" in k:
+        text_lines.append(f"{k}: {v}")
+    elif isinstance(v, (int, float)):
+        text_lines.append(f"{k}: ${v:,.0f}")
+    else:
+        text_lines.append(f"{k}: {v}"){v}")
                 text = "\n".join(text_lines)
                 text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
