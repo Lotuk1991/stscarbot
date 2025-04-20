@@ -370,10 +370,19 @@ async def handle_numeric_input(msg: types.Message):
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
 
-        # Проверка: все ли поля заполнены для пересчёта
-        required = ['price', 'location', 'fuel', 'year', 'engine_volume']
-        if all(key in user_data[user_id] for key in required):
-            try:
+        # Переход к следующему этапу по порядку
+        if field == 'price':
+            await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
+        elif field == 'delivery_price':
+            await msg.answer("Выбери тип топлива:", reply_markup=get_fuel_keyboard())
+        elif field == 'fuel':
+            await msg.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
+        elif field == 'year':
+            await msg.answer("Выбери объем двигателя:", reply_markup=get_engine_volume_keyboard())
+        elif field == 'engine_volume':
+            # Если всё заполнено — делаем расчёт
+            required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+            if all(key in user_data[user_id] for key in required):
                 result, breakdown = calculate_import(user_data[user_id])
                 text_lines = []
                 for k, v in breakdown.items():
@@ -396,15 +405,40 @@ async def handle_numeric_input(msg: types.Message):
                     InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
                     InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
                     InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
-                    InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
+                    InlineKeyboardButton("✏️ Услуги компанії", callback_data="edit_stscars"),
                     InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
                 )
-
                 await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
-            except Exception as e:
-                await msg.answer(f"Ошибка при пересчёте:\n`{e}`", parse_mode="Markdown")
         else:
-            await msg.answer("Поле обновлено.")
+            # Если это не один из этапов — просто обновим и посчитаем заново
+            required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+            if all(key in user_data[user_id] for key in required):
+                result, breakdown = calculate_import(user_data[user_id])
+                text_lines = []
+                for k, v in breakdown.items():
+                    if isinstance(v, (int, float)):
+                        text_lines.append(f"{k}: ${v:.2f}")
+                    else:
+                        text_lines.append(f"{k}: {v}")
+                text = "\n".join(text_lines)
+                text += f"\n\n*Итоговая сумма:* ${result:.2f}"
+
+                markup = InlineKeyboardMarkup(row_width=2)
+                markup.add(
+                    InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+                    InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+                    InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+                    InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+                    InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+                    InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
+                    InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
+                    InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+                    InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
+                    InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
+                    InlineKeyboardButton("✏️ Услуги компанії", callback_data="edit_stscars"),
+                    InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
+                )
+                await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
