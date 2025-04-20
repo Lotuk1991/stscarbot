@@ -361,14 +361,14 @@ async def reset_data(call: types.CallbackQuery):
 @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
+    text = float(msg.text)
 
+    # Если редактирование (edit_field), то пересчёт
     if 'edit_field' in user_data[user_id]:
         field = user_data[user_id].pop('edit_field')
-        user_data[user_id][field] = float(msg.text)
+        user_data[user_id][field] = text
 
-        # Проверим, есть ли все обязательные данные
-        required = ['price', 'location', 'fuel', 'year', 'engine_volume']
-        if all(key in user_data[user_id] for key in required):
+        try:
             result, breakdown = calculate_import(user_data[user_id])
             text_lines = []
             for k, v in breakdown.items():
@@ -395,8 +395,13 @@ async def handle_numeric_input(msg: types.Message):
             )
 
             await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
-        else:
-            await msg.answer("Поле обновлено.")
+        except Exception:
+            await msg.answer("Ошибка при пересчёте. Убедись, что все данные заполнены.")
+        return
+
+    # Если это первое заполнение (после выбора аукциона) — сохраняем цену и переходим к следующему шагу
+    user_data[user_id]['price'] = text
+    await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
