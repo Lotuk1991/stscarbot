@@ -120,6 +120,7 @@ async def choose_location(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
@@ -156,6 +157,7 @@ async def choose_fuel(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
@@ -192,6 +194,7 @@ async def choose_year(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
@@ -231,13 +234,27 @@ async def choose_volume(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
         )
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
 
     except Exception as e:
         await call.message.answer(f"Произошла ошибка при расчёте:\n`{e}`", parse_mode="Markdown")
+@dp.callback_query_handler(lambda c: c.data == 'generate_pdf')
+async def handle_generate_pdf(call: types.CallbackQuery):
+    user_id = call.from_user.id
+    data = user_data.get(user_id)
 
+    if not data:
+        await call.message.answer("Дані не знайдено. Почніть спочатку командою /start.")
+        return
+
+    # вызываем функцию генерации PDF
+    path = generate_pdf_invoice(data)
+
+    with open(path, 'rb') as f:
+        await bot.send_document(chat_id=call.message.chat.id, document=f, caption="Ваш PDF-розрахунок") в
 # Функция расчета импортных пошлин и стоимости
 
 def calculate_import(data):
@@ -392,16 +409,79 @@ async def handle_numeric_input(msg: types.Message):
                 InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
                 InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
                 InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+                InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf")
             )
 
             await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
         except Exception:
             await msg.answer("Ошибка при пересчёте. Убедись, что все данные заполнены.")
         return
+from fpdf import FPDF
 
+class InvoicePDF(FPDF):
+    def header(self):
+        logo_path = "logo.png"  # путь к логотипу PNG
+        self.image(logo_path, x=60, y=10, w=90, type='PNG')
+        self.set_y(60)
+
+def generate_pdf_invoice(data):
+    pdf = InvoicePDF()
+    pdf.add_page()
+    pdf.add_font("DejaVu", "", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", uni=True)
+    pdf.set_font("DejaVu", size=10)
+
+    col_widths = [10, 100, 50]
+    x_start = (pdf.w - sum(col_widths)) / 2
+
+    def cell(*args, **kwargs):
+        pdf.set_x(x_start)
+        pdf.cell(*args, **kwargs)
+
+    rows = [
+        ["Аукціон:", data.get("auction", "—").upper()],
+        ["1", "Ціна авто на аукціоні:", f"$ {data.get('price', 0):,.0f}"],
+        ["2", "Комісія аукціону", f"$ {data.get('auction_fee', 0):,.0f}"],
+        ["", "Комісія за оплату:", "$ 500"],
+        ["3", f"Доставка {data.get('location', '')} → Клайпеда", f"$ {data.get('delivery_price', 0) + (125 if data.get('fuel') in ['electric', 'hybrid'] else 0):,.0f}"],
+        ["", "Рік випуску", str(data.get("year", "—"))],
+        ["", "Паливо", str(data.get("fuel", "—")).capitalize()],
+        ["", "Обʼєм двигуна", str(data.get("engine_volume", "—"))],
+        ["4", "Розмитнення авто:"],
+        ["", "ПДВ 20%", f"$ {data.get('vat', 0):,.0f}"],
+        ["", "Ввізне мито 10%", f"$ {data.get('import_duty', 0):,.0f}"],
+        ["", "Акциз", f"$ {data.get('excise', 0):,.0f}"],
+        ["", "Сума:", f"$ {data.get('tamozhnya_total', 0):,.0f}"],
+        ["5", "Експедиція в порту Клайпеда", f"$ {data.get('expeditor', 350):,.0f}"],
+        ["6", "Брокерські послуги", f"$ {data.get('broker', 500):,.0f}"],
+        ["7", "Доставка до України", f"$ {data.get('delivery_ua', 1000):,.0f}"],
+        ["8", "Сертифікація", f"$ {data.get('cert', 150):,.0f}"],
+        ["9", "Пенсійний фонд", f"$ {data.get('pension', 0):,.0f}"],
+        ["10", "Послуги МРЕО", "$ 100"],
+        ["11", "Комісія за оплату інвойсу", f"$ {data.get('invoice_fee', 0):,.0f}"],
+        ["12", "Послуги STSCARS", f"$ {data.get('stscars', 500):,.0f}"],
+        ["", "До сплати:", f"$ {data.get('total', 0):,.0f}"]
+    ]
+
+    for row in rows:
+        pdf.set_x(x_start)
+        if len(row) == 2:
+            pdf.cell(col_widths[0] + col_widths[1], 8, row[0], border=1)
+            pdf.cell(col_widths[2], 8, row[1], border=1)
+        elif len(row) == 3:
+            pdf.cell(col_widths[0], 8, row[0], border=1)
+            pdf.cell(col_widths[1], 8, row[1], border=1)
+            pdf.cell(col_widths[2], 8, row[2], border=1)
+        elif len(row) == 1:
+            pdf.cell(sum(col_widths), 8, row[0], border=1)
+        pdf.ln()
+
+    filename = f"/mnt/data/rozrakhunok_{data.get('location', 'invoice')}.pdf"
+    pdf.output(filename)
+    return filename
     # Если это первое заполнение (после выбора аукциона) — сохраняем цену и переходим к следующему шагу
     user_data[user_id]['price'] = text
     await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
+    
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
