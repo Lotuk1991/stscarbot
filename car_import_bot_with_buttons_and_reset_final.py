@@ -99,7 +99,7 @@ async def choose_location(call: types.CallbackQuery):
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
         text_lines = []
-        for k, v in breakdown.items():
+for k, v in breakdown.items():
     if "Год выпуска" in k or "Рік випуску" in k:
         text_lines.append(f"{k}: {v}")
     elif isinstance(v, (int, float)):
@@ -138,7 +138,7 @@ async def choose_fuel(call: types.CallbackQuery):
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
         text_lines = []
-        for k, v in breakdown.items():
+for k, v in breakdown.items():
     if "Год выпуска" in k or "Рік випуску" in k:
         text_lines.append(f"{k}: {v}")
     elif isinstance(v, (int, float)):
