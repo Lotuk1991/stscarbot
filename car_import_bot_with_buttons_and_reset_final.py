@@ -249,6 +249,11 @@ async def choose_volume(call: types.CallbackQuery):
         await call.message.answer(f"Произошла ошибка при расчёте:\n`{e}`", parse_mode="Markdown")
 # Функция расчета импортных пошлин и стоимости
 
+def get_age_for_excise(year):
+    if year >= 2023:
+        return 1
+    return 2025 - year
+
 def calculate_import(data):
     expeditor = data.get('expeditor', 350)
     broker = data.get('broker', 500)
@@ -259,20 +264,16 @@ def calculate_import(data):
     volume = data['engine_volume']
     year = data['year']
     fuel = data['fuel']
-
-    # Новый расчёт возраста для акциза
-    if year >= 2023:
-        age = 1
-    else:
-        age = 2025 - year
-
     auction_fee = get_auction_fee(data['auction'], price)
 
-    # Таможенная стоимость
+    # Правильный возраст для акциза
+    age = get_age_for_excise(year)
+
+    # Таможенная стоимость (цена авто + сбор + доставка в Клайпеду + 1600)
     customs_base = price + auction_fee + 1600
     invoice_fee = (price + auction_fee + delivery_dict[data['location']]) * 0.05
 
-    # Пенсионный фонд
+    # Пенсионный фонд: зависит от таможенной стоимости
     if customs_base < 37440:
         pension_percent = 0.03
     elif customs_base <= 65800:
@@ -298,7 +299,7 @@ def calculate_import(data):
     pension = customs_base * pension_percent
 
     total = price + auction_fee + delivery + import_duty + excise + vat + \
-        expeditor + broker + delivery_ua + cert + pension + 100 + invoice_fee + stscars
+         expeditor + broker + delivery_ua + cert + pension + 100 + invoice_fee + stscars
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
