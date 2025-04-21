@@ -250,7 +250,7 @@ async def choose_volume(call: types.CallbackQuery):
 # Функция расчета импортных пошлин и стоимости
 
 def get_age_for_excise(year):
-    if year >= 2022:
+    if year >= 2021:
         return 1
     return 2025 - year
 
