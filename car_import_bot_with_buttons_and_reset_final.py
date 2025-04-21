@@ -259,14 +259,20 @@ def calculate_import(data):
     volume = data['engine_volume']
     year = data['year']
     fuel = data['fuel']
-    age = 2025 - year
+
+    # Новый расчёт возраста для акциза
+    if year >= 2023:
+        age = 1
+    else:
+        age = 2025 - year
+
     auction_fee = get_auction_fee(data['auction'], price)
 
-    # Таможенная стоимость (цена авто + сбор + доставка в Клайпеду + 1600)
+    # Таможенная стоимость
     customs_base = price + auction_fee + 1600
     invoice_fee = (price + auction_fee + delivery_dict[data['location']]) * 0.05
 
-    # Пенсионный фонд: зависит от таможенной стоимости
+    # Пенсионный фонд
     if customs_base < 37440:
         pension_percent = 0.03
     elif customs_base <= 65800:
@@ -292,11 +298,10 @@ def calculate_import(data):
     pension = customs_base * pension_percent
 
     total = price + auction_fee + delivery + import_duty + excise + vat + \
-         expeditor + broker + delivery_ua + cert + pension + 100 + invoice_fee + stscars
+        expeditor + broker + delivery_ua + cert + pension + 100 + invoice_fee + stscars
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
-
         'Цена авто': price,
         'Сбор аукциона': auction_fee,
         'Локация': data['location'],
