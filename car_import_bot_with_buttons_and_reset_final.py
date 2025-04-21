@@ -249,70 +249,72 @@ async def choose_volume(call: types.CallbackQuery):
         await call.message.answer(f"Произошла ошибка при расчёте:\n`{e}`", parse_mode="Markdown")
 # Функция расчета импортных пошлин и стоимости
 
-# Возраст авто: 2022 и новее — всегда 1
-if year >= 2022:
-    age = 1
-else:
-    age = 2025 - year
-
 def calculate_import(data):
     expeditor = data.get('expeditor', 350)
     broker = data.get('broker', 500)
     delivery_ua = data.get('delivery_ua', 1000)
     cert = data.get('cert', 150)
     stscars = data.get('stscars', 500)
+
     price = data['price']
     volume = data['engine_volume']
     year = data['year']
     fuel = data['fuel']
-    age = max(1, 2025 - year)  # возраст от 1 года
-    auction_fee = get_auction_fee(data['auction'], price)
+    location = data['location']
+    auction = data['auction']
 
-    # Базовые значения
-    customs_base = price + auction_fee + 1600
-    invoice_fee = (price + auction_fee + delivery_dict[data['location']]) * 0.05
-    euro_to_usd = 1.1
-
-    # Акциз
-    if fuel == 'electric':
-        excise_eur = 1 * age
-    elif fuel == 'hybrid' or fuel == 'gasoline':
-        rate = 100 if volume > 3.0 else 50
-        excise_eur = rate * volume * age
-    elif fuel == 'diesel':
-        rate = 150 if volume > 3.5 else 75
-        excise_eur = rate * volume * age
+    # Правильный возраст авто
+    if year >= 2022:
+        age = 1
     else:
-        excise_eur = 0
+        age = 2025 - year
 
-    excise = excise_eur * euro_to_usd
+    # Сбор аукциона
+    auction_fee = get_auction_fee(auction, price)
 
-    # Ввозная пошлина и НДС
-    import_duty = customs_base * 0.10
-    vat = (customs_base + import_duty + excise) * 0.20
-
-    # Доставка до Клайпеды
+    # Доставка
     delivery = data['delivery_price'] + (125 if fuel in ['electric', 'hybrid'] else 0)
 
-    # Пенсионный фонд (по курсу 40.5 грн/USD)
-    customs_base_uah = customs_base * 40.5
-    if customs_base_uah <= 499620:
+    # Таможенная стоимость (цена авто + сбор + доставка в Клайпеду + 1600)
+    customs_base = price + auction_fee + 1600
+    invoice_fee = (price + auction_fee + delivery_dict[location]) * 0.05
+
+    # Пенсионный фонд: по курсу 40.5 грн
+    grn_price = customs_base * 40.5
+    if grn_price < 499620:
         pension_percent = 0.03
-    elif customs_base_uah <= 878120:
+    elif grn_price <= 878120:
         pension_percent = 0.04
     else:
         pension_percent = 0.05
     pension = customs_base * pension_percent
 
+    # Акциз
+    if fuel == 'electric':
+        excise_eur = 1 * age
+    elif fuel in ['hybrid', 'gasoline']:
+        rate = 50 if volume <= 3.0 else 100
+        excise_eur = rate * volume * age
+    elif fuel == 'diesel':
+        rate = 75 if volume <= 3.5 else 150
+        excise_eur = rate * volume * age
+    else:
+        excise_eur = 0  # на всякий случай
+
+    euro_to_usd_fixed = 1.1
+    excise = excise_eur * euro_to_usd_fixed
+
+    import_duty = customs_base * 0.10
+    vat = (customs_base + import_duty + excise) * 0.20
+
     total = price + auction_fee + delivery + import_duty + excise + vat + \
             expeditor + broker + delivery_ua + cert + pension + 100 + invoice_fee + stscars
-
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
         'Цена авто': price,
         'Сбор аукциона': auction_fee,
-        'Локация': data['location'],
+        'Локация': location,
         'Доставка в Клайпеду': delivery,
         'Комиссия за оплату инвойса (5%)': invoice_fee,
         'Тип топлива': fuel.capitalize(),
