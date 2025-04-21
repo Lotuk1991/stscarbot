@@ -249,10 +249,11 @@ async def choose_volume(call: types.CallbackQuery):
         await call.message.answer(f"Произошла ошибка при расчёте:\n`{e}`", parse_mode="Markdown")
 # Функция расчета импортных пошлин и стоимости
 
-def get_age_for_excise(year):
-    if year >= 2021:
-        return 1
-    return 2025 - year
+# Возраст авто: 2022 и новее — всегда 1
+if year >= 2022:
+    age = 1
+else:
+    age = 2025 - year
 
 def calculate_import(data):
     expeditor = data.get('expeditor', 350)
