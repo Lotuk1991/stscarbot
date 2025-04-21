@@ -264,7 +264,7 @@ def calculate_import(data):
     auction = data['auction']
 
     # Правильный возраст авто
-    if year >= 2021:
+    if year >= 2023:
         age = 1
     else:
         age = 2026 - year
