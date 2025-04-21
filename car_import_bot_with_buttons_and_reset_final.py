@@ -267,7 +267,7 @@ def calculate_import(data):
     if year >= 2021:
         age = 1
     else:
-        age = 2025 - year
+        age = 2026 - year
 
     # Сбор аукциона
     auction_fee = get_auction_fee(auction, price)
