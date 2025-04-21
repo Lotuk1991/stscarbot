@@ -1,53 +1,79 @@
+import logging
 from aiogram import Bot, Dispatcher, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
+import aiohttp
 
-API_TOKEN = '7772557710:AAE9YdvAK3rOr_BEFyV4grUx5l2nf8KybBs'
+API_TOKEN = '7772557710:AAE9YdvAK3rOr_BEFyV4grUx5l2nf8KybBs'  # твой токен
+
+logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
 
-@dp.message_handler(commands=['lot'])
-async def send_lot_info(message: types.Message):
-    args = message.get_args()
-    if not args.isdigit():
-        await message.reply("Пожалуйста, укажите корректный номер лота.")
-        return
+# Состояния
+class ImportCarStates(StatesGroup):
+    waiting_for_lot = State()
 
-    lot_id = args
+# Старт
+@dp.message_handler(commands='start')
+async def start_command(message: types.Message):
+    await ImportCarStates.waiting_for_lot.set()
+    await message.answer("Привіт! Введи номер лоту Copart:")
+
+# Обработка номера лота
+@dp.message_handler(lambda message: message.text.isdigit(), state=ImportCarStates.waiting_for_lot)
+async def process_lot(message: types.Message, state: FSMContext):
+    lot_id = message.text.strip()
+    await message.answer("⏳ Отримую інформацію з Copart...")
+
     data = await fetch_lot_data(lot_id)
 
     if "error" in data:
-        await message.reply(f"Ошибка: {data['error']}")
+        await message.answer(f"Помилка: {data['error']}")
     else:
-        lot_details = data.get("data", {}).get("lotDetails", {})
-        if not lot_details:
-            await message.reply("Информация о лоте не найдена.")
+        lot = data.get("data", {}).get("lotDetails", {})
+        if not lot:
+            await message.answer("Інформацію про лот не знайдено.")
             return
 
-        # Извлечение необходимых данных
-        make = lot_details.get("make", "N/A")
-        model = lot_details.get("model", "N/A")
-        year = lot_details.get("year", "N/A")
-        fuel = lot_details.get("fuel", "N/A")
-        engine = lot_details.get("engine", "N/A")
-        transmission = lot_details.get("transmission", "N/A")
-        odometer = lot_details.get("odometer", "N/A")
-        location = lot_details.get("location", "N/A")
+        make = lot.get("make", "N/A")
+        model = lot.get("model", "N/A")
+        year = lot.get("year", "N/A")
+        fuel = lot.get("fuel", "N/A")
+        engine = lot.get("engine", "N/A")
+        odometer = lot.get("odometer", "N/A")
+        location = lot.get("location", {}).get("name", "N/A")
 
-        # Формирование сообщения
-        response = (
-            f"📄 Информация о лоте {lot_id}:\n"
+        await message.answer(
+            f"🔎 Інформація про лот {lot_id}:\n"
             f"Марка: {make}\n"
             f"Модель: {model}\n"
-            f"Год: {year}\n"
-            f"Топливо: {fuel}\n"
-            f"Двигатель: {engine}\n"
-            f"Коробка передач: {transmission}\n"
-            f"Пробег: {odometer}\n"
-            f"Местоположение: {location}"
+            f"Рік: {year}\n"
+            f"Паливо: {fuel}\n"
+            f"Двигун: {engine}\n"
+            f"Пробіг: {odometer}\n"
+            f"Локація: {location}"
         )
 
-        await message.reply(response)
+    await state.finish()
+
+# API-запрос к Copart
+async def fetch_lot_data(lot_id):
+    url = f"https://www.copart.com/public/data/lotdetails/solr/{lot_id}/USA"
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                return {"error": f"HTTP {response.status}"}
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
