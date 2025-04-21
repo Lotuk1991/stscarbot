@@ -264,42 +264,48 @@ def calculate_import(data):
     volume = data['engine_volume']
     year = data['year']
     fuel = data['fuel']
+    age = max(1, 2025 - year)  # возраст от 1 года
     auction_fee = get_auction_fee(data['auction'], price)
 
-    # Правильный возраст для акциза
-    age = get_age_for_excise(year)
-
-    # Таможенная стоимость (цена авто + сбор + доставка в Клайпеду + 1600)
+    # Базовые значения
     customs_base = price + auction_fee + 1600
     invoice_fee = (price + auction_fee + delivery_dict[data['location']]) * 0.05
-
-    # Пенсионный фонд: зависит от таможенной стоимости
-    if customs_base < 37440:
-        pension_percent = 0.03
-    elif customs_base <= 65800:
-        pension_percent = 0.04
-    else:
-        pension_percent = 0.05
+    euro_to_usd = 1.1
 
     # Акциз
     if fuel == 'electric':
         excise_eur = 1 * age
-    elif fuel == 'hybrid':
-        excise_eur = 100 * volume
-    else:
-        rate = 75 if fuel == 'gasoline' else 150
+    elif fuel == 'hybrid' or fuel == 'gasoline':
+        rate = 100 if volume > 3.0 else 50
         excise_eur = rate * volume * age
+    elif fuel == 'diesel':
+        rate = 150 if volume > 3.5 else 75
+        excise_eur = rate * volume * age
+    else:
+        excise_eur = 0
 
-    euro_to_usd_fixed = 1.1
-    excise = excise_eur * euro_to_usd_fixed
+    excise = excise_eur * euro_to_usd
 
+    # Ввозная пошлина и НДС
     import_duty = customs_base * 0.10
     vat = (customs_base + import_duty + excise) * 0.20
+
+    # Доставка до Клайпеды
     delivery = data['delivery_price'] + (125 if fuel in ['electric', 'hybrid'] else 0)
+
+    # Пенсионный фонд (по курсу 40.5 грн/USD)
+    customs_base_uah = customs_base * 40.5
+    if customs_base_uah <= 499620:
+        pension_percent = 0.03
+    elif customs_base_uah <= 878120:
+        pension_percent = 0.04
+    else:
+        pension_percent = 0.05
     pension = customs_base * pension_percent
 
     total = price + auction_fee + delivery + import_duty + excise + vat + \
-         expeditor + broker + delivery_ua + cert + pension + 100 + invoice_fee + stscars
+            expeditor + broker + delivery_ua + cert + pension + 100 + invoice_fee + stscars
+
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
@@ -319,10 +325,11 @@ def calculate_import(data):
         'Брокерские услуги': broker,
         'Доставка в Украину': delivery_ua,
         'Сертификация': cert,
-        f'Пенсионный фонд ({int(pension_percent*100)}%)': pension,
+        f'Пенсионный фонд ({int(pension_percent * 100)}%)': pension,
         'МРЭО (постановка на учет)': 100,
         'Услуги компании': stscars,
     }
+
     return total, breakdown
 
 # Получение сбора аукциона по цене
