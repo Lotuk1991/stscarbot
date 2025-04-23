@@ -1,4 +1,4 @@
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -6,11 +6,24 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
+# Регистрируем шрифт с поддержкой кириллицы
+pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
+
 def generate_import_pdf(breakdown, result, buffer):
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     styles = getSampleStyleSheet()
-    pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
+    styles["Title"].fontName = 'DejaVu'
+    styles["Normal"].fontName = 'DejaVu'
+
     elements = []
+
+    # Добавляем логотип
+    try:
+        logo = Image("logo.png", width=100, height=50)  # Укажи путь и размеры логотипа
+        elements.append(logo)
+        elements.append(Spacer(1, 12))
+    except Exception as e:
+        print(f"Ошибка при добавлении логотипа: {e}")
 
     elements.append(Paragraph("🚗 <b>Финальный расчёт по импорту авто</b>", styles["Title"]))
     elements.append(Spacer(1, 12))
@@ -26,7 +39,7 @@ def generate_import_pdf(breakdown, result, buffer):
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
         ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
-        ("FONTNAME", (0, 0), (-1, -1), "DejaVu"),
+        ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
         ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
         ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
     ]))
