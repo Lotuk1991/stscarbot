@@ -24,13 +24,13 @@ def generate_import_pdf(breakdown, result, buffer):
         elements.append(logo)
         elements.append(Spacer(1, 18))
     except Exception as e:
-        print(f"Ошибка с логотипом: {e}")
+        print(f"Помилка з логотипом: {e}")
 
     # Цвет заголовка
     header_color = colors.HexColor("#38c4ef")
 
     # Подготовка таблицы
-    table_data = [[Paragraph("Параметр", bold), Paragraph("Значение", bold)]]
+    table_data = [[Paragraph("Параметр", bold), Paragraph("Значення", bold)]]
 
     for k, v in breakdown.items():
         val = f"${v:,.0f}" if isinstance(v, (int, float)) else v
@@ -38,7 +38,7 @@ def generate_import_pdf(breakdown, result, buffer):
 
     # Финал
     table_data.append([
-        Paragraph("<b>До сплати</b>", bold),
+        Paragraph("<b>Загальна вартість:</b>", bold),
         Paragraph(f"<b>${result:,.0f}</b>", bold)
     ])
 
