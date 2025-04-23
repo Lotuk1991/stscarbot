@@ -22,7 +22,7 @@ def generate_import_pdf(breakdown, result, buffer):
 
     # Логотип
     try:
-        logo = Image("logo.png", width=200, height=100)
+        logo = Image("logo.png", width=200, height=80)
         elements.append(logo)
         elements.append(Spacer(1, 12))
     except Exception as e:
