@@ -3,10 +3,13 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 def generate_import_pdf(breakdown, result, buffer):
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     styles = getSampleStyleSheet()
+    pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
     elements = []
 
     elements.append(Paragraph("🚗 <b>Финальный расчёт по импорту авто</b>", styles["Title"]))
@@ -23,7 +26,7 @@ def generate_import_pdf(breakdown, result, buffer):
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
         ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 0), (-1, -1), "DejaVu"),
         ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
         ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
     ]))
