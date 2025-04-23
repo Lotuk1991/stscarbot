@@ -5,52 +5,49 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+import os
 
-# Шрифт с кириллицей
+# Регистрация шрифта с поддержкой кириллицы
 pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
 
 def generate_import_pdf(breakdown, result, buffer):
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     styles = getSampleStyleSheet()
-    normal = ParagraphStyle(name='Normal', fontName='DejaVu', fontSize=10)
-    bold = ParagraphStyle(name='Bold', fontName='DejaVu', fontSize=10, leading=12, spaceAfter=6)
-    bold.fontName = 'DejaVu'
-    bold.fontSize = 10
-    bold.leading = 12
+    styles.add(ParagraphStyle(name='NormalCyr', parent=styles['Normal'], fontName='DejaVu'))
+    styles.add(ParagraphStyle(name='BoldCyr', parent=styles['Heading4'], fontName='DejaVu'))
 
     elements = []
 
-    # Логотип (в 2 раза больше)
-    try:
-        logo = Image("logo.png", width=200, height=100)
-        elements.append(logo)
-        elements.append(Spacer(1, 10))
-    except Exception as e:
-        print(f"Ошибка с логотипом: {e}")
+    # Логотип
+    logo_path = "logo.png"
+    if os.path.exists(logo_path):
+        img = Image(logo_path, width=200, height=100)
+        elements.append(img)
+        elements.append(Spacer(1, 12))
 
-    # Таблица
-    table_data = [[Paragraph("Параметр", bold), Paragraph("Значение", bold)]]
-    for k, v in breakdown.items():
-        val = f"${v:,.0f}" if isinstance(v, (int, float)) and "Год" not in k else v
-        table_data.append([
-            Paragraph(str(k), normal),
-            Paragraph(str(val), normal)
-        ])
+    # Заголовок
+    elements.append(Paragraph("Финальный расчёт по импорту авто", styles['Title']))
+    elements.append(Spacer(1, 12))
 
-    table_data.append([
-        Paragraph("Итоговая сумма", bold),
-        Paragraph(f"${result:,.0f}", bold)
-    ])
+    # Таблица с таможенными платежами
+    table_data = [
+        [Paragraph("<b>Параметр</b>", styles['NormalCyr']), Paragraph("<b>Значение</b>", styles['NormalCyr'])],
+        [Paragraph("Ввозная пошлина (10%)", styles['NormalCyr']), Paragraph(f"${breakdown['Ввозная пошлина (10%)']:.2f}", styles['NormalCyr'])],
+        [Paragraph("Акциз (EUR, пересчитан в USD)", styles['NormalCyr']), Paragraph(f"${breakdown['Акциз (EUR, пересчитан в USD)']:.2f}", styles['NormalCyr'])],
+        [Paragraph("НДС (20%)", styles['NormalCyr']), Paragraph(f"${breakdown['НДС (20%)']:.2f}", styles['NormalCyr'])],
+        [Paragraph("<b>Таможенные платежи (итого)</b>", styles['NormalCyr']), Paragraph(f"<b>${breakdown['Таможенные платежи (итого)']:.2f}</b>", styles['NormalCyr'])]
+    ]
 
     table = Table(table_data, colWidths=[110*mm, 60*mm])
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
-        ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
         ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
+        ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
         ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+        ("BOX", (0, 1), (-1, 4), 1, colors.red)  # Обводка блока с таможенными платежами
     ]))
 
     elements.append(table)
