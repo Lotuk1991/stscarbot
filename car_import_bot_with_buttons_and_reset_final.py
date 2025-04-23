@@ -251,10 +251,10 @@ async def choose_volume(call: types.CallbackQuery):
 
 def calculate_import(data):
     expeditor = data.get('expeditor', 350)
-    broker = data.get('broker', 500)
+    broker = data.get('broker', 150)
     delivery_ua = data.get('delivery_ua', 1000)
     cert = data.get('cert', 150)
-    stscars = data.get('stscars', 500)
+    stscars = data.get('stscars', 0)
 
     price = data['price']
     volume = data['engine_volume']
