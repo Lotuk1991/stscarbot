@@ -6,7 +6,8 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from collections import defaultdict
-
+from pdf_generator import generate_import_pdf
+import tempfile
 # Логирование
 logging.basicConfig(level=logging.INFO)
 
@@ -461,6 +462,24 @@ async def handle_numeric_input(msg: types.Message):
             InlineKeyboardButton("📦 Сбросить", callback_data="reset")
         )
                 await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
+@dp.callback_query_handler(lambda c: c.data == "generate_pdf")
+async def send_pdf(call: types.CallbackQuery):
+    user_id = call.from_user.id
+    if user_id not in user_data:
+        await call.message.answer("Нет данных для генерации PDF.")
+        return
+
+    result, breakdown = calculate_import(user_data[user_id])
+
+    # Генерация PDF в BytesIO
+    buffer = io.BytesIO()
+    generate_import_pdf(breakdown, result, buffer)
+    buffer.seek(0)
+    buffer.name = "import_report.pdf"
+
+    await bot.send_document(call.message.chat.id, InputFile(buffer))
+
+
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
