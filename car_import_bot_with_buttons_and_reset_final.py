@@ -4,7 +4,7 @@ import json
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputFile
 from collections import defaultdict
 from pdf_generator import generate_import_pdf
 import tempfile
