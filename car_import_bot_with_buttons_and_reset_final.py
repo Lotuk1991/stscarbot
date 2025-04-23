@@ -479,7 +479,22 @@ async def send_pdf(call: types.CallbackQuery):
     buffer.name = "import_report.pdf"
 
     await bot.send_document(call.message.chat.id, InputFile(buffer))
+@dp.callback_query_handler(lambda c: c.data == "generate_pdf")
+async def send_pdf(call: types.CallbackQuery):
+    user_id = call.from_user.id
+    if user_id not in user_data:
+        await call.message.answer("Нет данных для генерации PDF.")
+        return
 
+    result, breakdown = calculate_import(user_data[user_id])
+    auction = user_data[user_id].get("auction", "—")
+
+    buffer = io.BytesIO()
+    generate_import_pdf(breakdown, result, buffer, auction=auction)
+    buffer.seek(0)
+    buffer.name = "import_report.pdf"
+
+    await bot.send_document(call.message.chat.id, InputFile(buffer))
 
 # === Запуск бота ===
 if __name__ == '__main__':
