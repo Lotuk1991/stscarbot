@@ -4,8 +4,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 
-def generate_import_pdf(breakdown, result, filename):
-    doc = SimpleDocTemplate(filename, pagesize=A4)
+def generate_import_pdf(breakdown, result, buffer):
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
     styles = getSampleStyleSheet()
     elements = []
 
