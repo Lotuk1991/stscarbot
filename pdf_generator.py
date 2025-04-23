@@ -6,6 +6,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
+# Шрифт с кириллицей
 pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
 
 def generate_import_pdf(breakdown, result, buffer):
@@ -16,43 +17,38 @@ def generate_import_pdf(breakdown, result, buffer):
 
     elements = []
 
-    # Логотип
+    # Логотип (в 2 раза больше)
     logo = Image("logo.png", width=200, height=100)
     elements.append(logo)
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(1, 10))
 
-    # Аукцион (в заголовок таблицы)
-    auction = breakdown.get('Аукцион', '—')
-    header_text = f"<b>Аукціон: {auction}</b>"
-    elements.append(Paragraph(header_text, bold))
-    elements.append(Spacer(1, 6))
+    # Заголовок таблицы — аукцион
+    auction_name = breakdown.get("Аукцион", "Аукцион")
+    table_data = [[Paragraph(f"<b>Аукцион: {auction_name}</b>", bold), ""]]
 
-    # Таблица
-    table_data = [[Paragraph("<b>Параметр</b>", bold), Paragraph("<b>Значення</b>", bold)]]
-
+    # Составление таблицы
     for k, v in breakdown.items():
-        if k == 'Аукцион': continue  # Уже в заголовке
-        val = f"${v:,.0f}" if isinstance(v, (int, float)) and "Год" not in k and "Рік" not in k else v
-        table_data.append([
-            Paragraph(str(k), normal),
-            Paragraph(str(val), normal)
-        ])
+        if k == "Аукцион":
+            continue
+        val = f"${v:,.0f}" if isinstance(v, (int, float)) and "Год" not in k else v
+        table_data.append([Paragraph(k, normal), Paragraph(val, normal)])
 
-    # Итоговая строка
+    # Итоговая сумма
     table_data.append([
         Paragraph("<b>До сплати</b>", bold),
         Paragraph(f"<b>${result:,.0f}</b>", bold)
     ])
 
-    table = Table(table_data, colWidths=[110 * mm, 60 * mm])
+    # Создание таблицы
+    table = Table(table_data, colWidths=[110*mm, 60*mm])
     table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#00B5F1")),  # Цвет логотипа
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#00B5F1")),  # Цвет заголовка как в логотипе
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
         ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
-        ("GRID", (0, 0), (-1, -1), 0.6, colors.black)
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
     ]))
 
     elements.append(table)
