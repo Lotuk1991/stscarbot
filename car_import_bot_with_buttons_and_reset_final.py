@@ -8,6 +8,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from collections import defaultdict
 from pdf_generator import generate_import_pdf
 import tempfile
+import io
 # Логирование
 logging.basicConfig(level=logging.INFO)
 
