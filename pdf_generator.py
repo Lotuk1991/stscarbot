@@ -29,6 +29,8 @@ def generate_import_pdf(breakdown, result, buffer, auction="—"):
     table_data = [[Paragraph("<b>Параметр</b>", bold), Paragraph("<b>Значення</b>", bold)]]
 
     for k, v in breakdown.items():
+        if k == "ПДВ":
+            table_data.append([Paragraph("<b>Розмитнення авто</b>", bold), ""])
         val = f"${v:,.0f}" if isinstance(v, (int, float)) and "Год" not in k else v
         table_data.append([Paragraph(str(k), normal), Paragraph(str(val), normal)])
 
@@ -47,6 +49,8 @@ def generate_import_pdf(breakdown, result, buffer, auction="—"):
         ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
         ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("SPAN", (0, len(table_data)-2), (1, len(table_data)-2)),
+        ("BACKGROUND", (0, len(table_data)-2), (1, len(table_data)-2), colors.HexColor("#E6F7FF"))
     ]))
 
     elements.append(table)
