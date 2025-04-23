@@ -76,7 +76,7 @@ def get_engine_volume_keyboard():
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     user_data[message.from_user.id] = {}
-    await message.answer("Привіт! Обери аукціон:"), reply_markup=get_auction_keyboard()
+    await message.answer("Привіт! Обери аукціон:", reply_markup=get_auction_keyboard())
 
 @dp.callback_query_handler(lambda c: c.data in ['copart', 'iaai'])
 async def choose_auction(call: types.CallbackQuery):
