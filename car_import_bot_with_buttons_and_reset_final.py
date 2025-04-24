@@ -192,14 +192,15 @@ async def choose_fuel(call: types.CallbackQuery):
     else:
         if call.data == 'electric':
             await call.message.answer(
-                "Выбери мощность электромобиля (кВт):",
-                reply_markup=get_power_kw_keyboard()
-            )
-        else:
-            await call.message.answer(
                 "Выбери год выпуска:",
                 reply_markup=get_year_keyboard()
             )
+        else:
+            await call.message.answer(
+                "Выбери мощность электромобиля (кВт):",
+                reply_markup=get_power_kw_keyboard()
+            )
+            
 @dp.callback_query_handler(lambda c: c.data.startswith('year_'))
 async def choose_year(call: types.CallbackQuery):
     user_id = call.from_user.id
@@ -551,12 +552,13 @@ async def forward_to_expert(message: types.Message):
         await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
         user_data[user_id]["expecting_question"] = False
         
-@dp.callback_query_handler(lambda c: c.data.startswith('kw_'))
+@dp.callback_query_handler(lambda c: c.data.startswith('power_'))
 async def choose_power_kw(call: types.CallbackQuery):
     user_id = call.from_user.id
-    kw = int(call.data[3:])
-    user_data[user_id]['engine_volume'] = kw  # используем это поле как кВт
-    required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+    power_kw = int(call.data.split('_')[1])
+    user_data[user_id]['engine_volume'] = power_kw  # переиспользуем engine_volume как kW
+
+    required = ['price', 'location', 'fuel', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
         text_lines = []
@@ -567,14 +569,22 @@ async def choose_power_kw(call: types.CallbackQuery):
                 text_lines.append(f"{k}: {v}")
         text = "\n".join(text_lines)
         text += f"\n\n*Итоговая сумма:* ${result:.0f}"
+
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
+            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("⚡ Мощность (кВт)", callback_data="edit_volume"),  # можно изменить текст
+            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf"),
             InlineKeyboardButton("📦 Сбросить", callback_data="reset")
         )
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
-    else:
-        await call.message.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
