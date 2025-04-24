@@ -325,6 +325,7 @@ async def choose_power_kw(call: types.CallbackQuery):
 # Функция расчета импортных пошлин и стоимости
 
 def calculate_import(data):
+    
     expeditor = data.get('expeditor', 350)
     broker = data.get('broker', 150)
     delivery_ua = data.get('delivery_ua', 1000)
@@ -335,6 +336,7 @@ def calculate_import(data):
     volume = data['engine_volume']
     year = data['year']
     fuel = data['fuel']
+    is_electric = fuel == 'electric'
     location = data['location']
     auction = data['auction']
 
@@ -365,8 +367,9 @@ def calculate_import(data):
     pension = customs_base * pension_percent
 
     # Акциз
-    if fuel == 'electric':
-        excise = volume * 1.1
+    if is_electric:
+        power_kw = data.get('power_kw', 0)
+        excise = power_kw * 1.1
         import_duty = 0
         vat = 0
         pension = 0
