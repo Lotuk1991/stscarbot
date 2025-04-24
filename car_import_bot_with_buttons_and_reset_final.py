@@ -9,6 +9,7 @@ from collections import defaultdict
 from pdf_generator import generate_import_pdf
 import tempfile
 import io
+from collections import defaultdict, deque
 # Логирование
 logging.basicConfig(level=logging.INFO)
 
@@ -20,6 +21,7 @@ dp = Dispatcher(bot)
 
 # Хранилище пользовательских данных
 user_data = defaultdict(dict)
+user_reports = defaultdict(lambda: deque(maxlen=5))
 
 # Загрузка данных
 with open('delivery_dict.json', 'r') as f:
