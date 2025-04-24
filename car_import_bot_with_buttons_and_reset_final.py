@@ -84,6 +84,13 @@ def get_engine_volume_keyboard():
     for i in range(0, len(buttons), 3):
         markup.row(*buttons[i:i+3])
     return markup
+    
+def get_power_kw_keyboard():
+    markup = InlineKeyboardMarkup(row_width=3)
+    for kw in range(30, 130, 10):
+        markup.add(InlineKeyboardButton(f"{kw} кВт", callback_data=f"kw_{kw}"))
+    return markup
+    
 # Обработчики
 @dp.callback_query_handler(lambda c: c.data == "ask_expert")
 async def handle_expert_request(call: types.CallbackQuery):
@@ -183,7 +190,11 @@ async def choose_fuel(call: types.CallbackQuery):
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await call.message.answer("Рік випуску:", reply_markup=get_year_keyboard())
+        if call.data == 'electric':
+    await call.message.answer("Выбери мощность электромобиля (кВт):", reply_markup=get_power_kw_keyboard())
+else:
+    await call.message.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
+    
 @dp.callback_query_handler(lambda c: c.data.startswith('year_'))
 async def choose_year(call: types.CallbackQuery):
     user_id = call.from_user.id
@@ -315,7 +326,10 @@ def calculate_import(data):
 
     # Акциз
     if fuel == 'electric':
-        excise_eur = 1 * age
+        excise = volume * 1.1
+        import_duty = 0
+        vat = 0
+        pension = 0
     elif fuel in ['hybrid', 'gasoline']:
         rate = 50 if volume <= 3.0 else 100
         excise_eur = rate * volume * age
@@ -531,6 +545,31 @@ async def forward_to_expert(message: types.Message):
         )
         await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
         user_data[user_id]["expecting_question"] = False
+        
+@dp.callback_query_handler(lambda c: c.data.startswith('kw_'))
+async def choose_power_kw(call: types.CallbackQuery):
+    user_id = call.from_user.id
+    kw = int(call.data[3:])
+    user_data[user_id]['engine_volume'] = kw  # используем это поле как кВт
+    required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+    if all(key in user_data[user_id] for key in required):
+        result, breakdown = calculate_import(user_data[user_id])
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.0f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Итоговая сумма:* ${result:.0f}"
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("📄 Сгенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset")
+        )
+        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+    else:
+        await call.message.answer("Выбери год выпуска:", reply_markup=get_year_keyboard())
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
