@@ -70,19 +70,20 @@ def get_fuel_keyboard():
 def get_year_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
     buttons = []
-for year in range(2010, 2026):
-    buttons.append(InlineKeyboardButton(str(year), callback_data=f"year_{year}"))
-for i in range(0, len(buttons), 3):
-    markup.row(*buttons[i:i+3])
+    for year in range(2010, 2026):
+        buttons.append(InlineKeyboardButton(str(year), callback_data=f"year_{year}"))
+    for i in range(0, len(buttons), 3):
+        markup.row(*buttons[i:i+3])
+    return markup
     
 
 def get_engine_volume_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
-    volumes = [1.0, 1.2, 1.5, 1.6, 2.0, 2.4, 2.5, 3.0, 3.2, 3.5, 3.7, 4.0]
-buttons = [InlineKeyboardButton(str(v), callback_data=f"vol_{v}") for v in volumes]
-for i in range(0, len(buttons), 3):
-    markup.row(*buttons[i:i+3])
-
+    volumes = [1.0, 1.2, 1.5, 1.6, 2.0, 2.4, 2.5, 3.0, 3.5, 4.0]
+    buttons = [InlineKeyboardButton(str(v), callback_data=f"vol_{v}") for v in volumes]
+    for i in range(0, len(buttons), 3):
+        markup.row(*buttons[i:i+3])
+    return markup
 # Обработчики
 @dp.callback_query_handler(lambda c: c.data == "ask_expert")
 async def handle_expert_request(call: types.CallbackQuery):
