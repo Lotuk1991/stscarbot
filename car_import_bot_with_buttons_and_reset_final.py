@@ -241,11 +241,12 @@ async def choose_volume(call: types.CallbackQuery):
 
         # Расчёт
         result, breakdown = calculate_import(user_data[user_id])
+# === Обработчик выбора кВт (для electric) ===
 @dp.callback_query_handler(lambda c: c.data.startswith('kw_'))
 async def choose_kw(call: types.CallbackQuery):
     user_id = call.from_user.id
     kw = int(call.data[3:])
-    user_data[user_id]['engine_volume'] = kw  # сохраняем кВт как объем
+    user_data[user_id]['engine_volume'] = kw  # используем volume как мощность для electric
 
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
@@ -253,13 +254,12 @@ async def choose_kw(call: types.CallbackQuery):
         text_lines = []
         for k, v in breakdown.items():
             if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:,.0f}")
+                text_lines.append(f"{k}: ${v:.0f}")
             else:
                 text_lines.append(f"{k}: {v}")
         text = "\n".join(text_lines)
-        text += f"\n\n*Підсумкова сума:* ${result:,.0f}"
+        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
 
-        # Кнопки редактирования (у тебя уже есть — можешь вставить свой набор)
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
@@ -267,6 +267,11 @@ async def choose_kw(call: types.CallbackQuery):
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
             InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
