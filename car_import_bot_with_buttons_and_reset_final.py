@@ -591,13 +591,13 @@ async def forward_to_expert(message: types.Message):
         await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
         user_data[user_id]["expecting_question"] = False
         
-@dp.callback_query_handler(lambda c: c.data.startswith('power_'))
+@dp.callback_query_handler(lambda c: c.data.startswith('kw_'))
 async def choose_power_kw(call: types.CallbackQuery):
     user_id = call.from_user.id
-    power_kw = int(call.data.split('_')[1])
-    user_data[user_id]['engine_volume'] = power_kw  # переиспользуем engine_volume как kW
+    power_kw = int(call.data[3:])
+    user_data[user_id]['power_kw'] = power_kw
 
-    required = ['price', 'location', 'fuel', 'engine_volume']
+    required = ['price', 'location', 'fuel', 'year', 'power_kw']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
         text_lines = []
@@ -607,8 +607,7 @@ async def choose_power_kw(call: types.CallbackQuery):
             else:
                 text_lines.append(f"{k}: {v}")
         text = "\n".join(text_lines)
-        text += f"\n\n*Итоговая сумма:* ${result:.0f}"
-
+        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
