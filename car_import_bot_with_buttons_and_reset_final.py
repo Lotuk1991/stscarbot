@@ -247,7 +247,7 @@ async def choose_volume(call: types.CallbackQuery):
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
 
-        await call.message.answer(text, reply_markup=markup, parse_mode="HTML")
+        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
 
     except Exception as e:
         await call.message.answer(f"Сталася помилка під час розрахунку::\n`{e}`", parse_mode="Markdown")
