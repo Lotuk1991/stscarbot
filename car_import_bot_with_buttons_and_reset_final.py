@@ -369,10 +369,12 @@ def calculate_import(data):
     # Акциз
     if is_electric:
         power_kw = data.get('power_kw', 0)
-        excise = power_kw * 1.1
+        excise_eur = power_kw  # 1 евро за 1 кВт
+        excise = excise_eur * euro_to_usd_fixed
         import_duty = 0
         vat = 0
         pension = 0
+        volume_display = f"{power_kw} кВт"
     elif fuel in ['hybrid', 'gasoline']:
         rate = 50 if volume <= 3.0 else 100
         excise_eur = rate * volume * age
