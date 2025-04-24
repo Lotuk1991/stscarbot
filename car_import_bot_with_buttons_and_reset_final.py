@@ -190,21 +190,15 @@ async def choose_fuel(call: types.CallbackQuery):
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        if call.data == 'electric':
-            await call.message.answer(
-                "Выбери мощность электромобиля (кВт):",
-                reply_markup=get_power_kw_keyboard()
-            )
-        else:
-            await call.message.answer(
-                "Выбери год выпуска:",
-                reply_markup=get_year_keyboard()
-            )
+        await call.message.answer("Вибери рік випуску:", reply_markup=get_year_keyboard())
+            
 @dp.callback_query_handler(lambda c: c.data.startswith('year_'))
 async def choose_year(call: types.CallbackQuery):
     user_id = call.from_user.id
     year = int(call.data[5:])
     user_data[user_id]['year'] = year
+
+    fuel = user_data[user_id].get('fuel')
 
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
@@ -237,7 +231,10 @@ async def choose_year(call: types.CallbackQuery):
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await call.message.answer("Обери обʼєм двигуна:", reply_markup=get_engine_volume_keyboard())
+        if fuel == 'electric':
+            await call.message.answer("Обери потужність авто (кВт):", reply_markup=get_power_kw_keyboard())
+        else:
+            await call.message.answer("Обери обʼєм двигуна:", reply_markup=get_engine_volume_keyboard())
 @dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
 async def choose_volume(call: types.CallbackQuery):
     try:
