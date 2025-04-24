@@ -75,7 +75,21 @@ def get_engine_volume_keyboard():
     return markup
 
 # Обработчики
-
+@dp.callback_query_handler(lambda c: c.data == "ask_expert")
+async def handle_expert_request(call: types.CallbackQuery):
+    user_data[call.from_user.id]["expecting_question"] = True
+    await call.message.answer("✍️ Напишіть ваше питання, і експерт зв'яжеться з вами.")
+@dp.message_handler()
+async def forward_to_expert(message: types.Message):
+    user_id = message.from_user.id
+    if user_data[user_id].get("expecting_question"):
+        expert_chat_id = 422284478  # твой Telegram ID
+        await bot.send_message(
+            expert_chat_id,
+            f"📩 Питання від @{message.from_user.username or message.from_user.full_name}:\n\n{message.text}"
+        )
+        await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
+        user_data[user_id]["expecting_question"] = False
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     user_data[message.from_user.id] = {}
@@ -256,21 +270,7 @@ async def choose_volume(call: types.CallbackQuery):
 
     except Exception as e:
         await call.message.answer(f"Сталася помилка під час розрахунку::\n`{e}`", parse_mode="Markdown")
-@dp.callback_query_handler(lambda c: c.data == "ask_expert")
-async def handle_expert_request(call: types.CallbackQuery):
-    user_data[call.from_user.id]["expecting_question"] = True
-    await call.message.answer("✍️ Напишіть ваше питання, і експерт зв'яжеться з вами.")
-@dp.message_handler()
-async def forward_to_expert(message: types.Message):
-    user_id = message.from_user.id
-    if user_data[user_id].get("expecting_question"):
-        expert_chat_id = 422284478  # твой Telegram ID
-        await bot.send_message(
-            expert_chat_id,
-            f"📩 Питання від @{message.from_user.username or message.from_user.full_name}:\n\n{message.text}"
-        )
-        await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
-        user_data[user_id]["expecting_question"] = False
+
 # Функция расчета импортных пошлин и стоимости
 
 def calculate_import(data):
