@@ -125,6 +125,7 @@ async def choose_location(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
 
@@ -162,6 +163,7 @@ async def choose_fuel(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
 
@@ -199,6 +201,7 @@ async def choose_year(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
 
@@ -245,6 +248,7 @@ async def choose_volume(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
 
@@ -434,6 +438,7 @@ async def handle_numeric_input(msg: types.Message):
             InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
                 await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
