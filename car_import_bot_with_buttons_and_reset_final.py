@@ -84,13 +84,6 @@ def get_engine_volume_keyboard():
     for i in range(0, len(buttons), 3):
         markup.row(*buttons[i:i+3])
     return markup
-def get_kw_keyboard():
-    markup = InlineKeyboardMarkup(row_width=3)
-    powers = [30, 40, 50, 60, 70, 80, 90, 100]
-    buttons = [InlineKeyboardButton(f"{p} кВт", callback_data=f"kw_{p}") for p in powers]
-    for i in range(0, len(buttons), 3):
-        markup.row(*buttons[i:i+3])
-    return markup
 # Обработчики
 @dp.callback_query_handler(lambda c: c.data == "ask_expert")
 async def handle_expert_request(call: types.CallbackQuery):
@@ -156,9 +149,6 @@ async def choose_location(call: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data in ['gasoline', 'diesel', 'hybrid', 'electric'])
 async def choose_fuel(call: types.CallbackQuery):
-    if call.data == "electric":
-        await call.message.answer("Оберіть потужність батареї (кВт):", reply_markup=get_kw_keyboard())
-        return
     user_id = call.from_user.id
     user_data[user_id]['fuel'] = call.data
 
@@ -241,42 +231,7 @@ async def choose_volume(call: types.CallbackQuery):
 
         # Расчёт
         result, breakdown = calculate_import(user_data[user_id])
-# === Обработчик выбора кВт (для electric) ===
-@dp.callback_query_handler(lambda c: c.data.startswith('kw_'))
-async def choose_kw(call: types.CallbackQuery):
-    user_id = call.from_user.id
-    kw = int(call.data[3:])
-    user_data[user_id]['engine_volume'] = kw  # используем volume как мощность для electric
 
-    required = ['price', 'location', 'fuel', 'year', 'engine_volume']
-    if all(key in user_data[user_id] for key in required):
-        result, breakdown = calculate_import(user_data[user_id])
-        text_lines = []
-        for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
-        text = "\n".join(text_lines)
-        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
-
-        markup = InlineKeyboardMarkup(row_width=2)
-        markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
-            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
-            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
-            InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
-            InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
-        )
-
-        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
         # Формируем текст результата
                 # Формируем текст результата
         try:
