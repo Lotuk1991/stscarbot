@@ -157,8 +157,8 @@ async def choose_location(call: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data in ['gasoline', 'diesel', 'hybrid', 'electric'])
 async def choose_fuel(call: types.CallbackQuery):
     if call.data == "electric":
-    await call.message.answer("Оберіть потужність батареї (кВт):", reply_markup=get_kw_keyboard())
-    return
+        await call.message.answer("Оберіть потужність батареї (кВт):", reply_markup=get_kw_keyboard())
+        return
     user_id = call.from_user.id
     user_data[user_id]['fuel'] = call.data
 
