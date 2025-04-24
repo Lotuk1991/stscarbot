@@ -87,7 +87,7 @@ def get_engine_volume_keyboard():
     
 def get_power_kw_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
-    for kw in range(30, 130, 10):
+    for kw in range(30, 131, 10):
         markup.add(InlineKeyboardButton(f"{kw} кВт", callback_data=f"kw_{kw}"))
     return markup
     
