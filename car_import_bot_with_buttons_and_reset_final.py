@@ -21,6 +21,7 @@ dp = Dispatcher(bot)
 
 # Хранилище пользовательских данных
 user_data = defaultdict(dict)
+user_reports = defaultdict(list)
 user_reports = defaultdict(lambda: deque(maxlen=5))
 
 # Загрузка данных
@@ -466,22 +467,6 @@ async def handle_numeric_input(msg: types.Message):
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
                 await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
-@dp.callback_query_handler(lambda c: c.data == "generate_pdf")
-async def send_pdf(call: types.CallbackQuery):
-    user_id = call.from_user.id
-    if user_id not in user_data:
-        await call.message.answer("Немає даних для генерації PDF.")
-        return
-
-    result, breakdown = calculate_import(user_data[user_id])
-
-    # Генерация PDF в BytesIO
-    buffer = io.BytesIO()
-    generate_import_pdf(breakdown, result, buffer)
-    buffer.seek(0)
-    buffer.name = "import_report.pdf"
-
-    await bot.send_document(call.message.chat.id, InputFile(buffer))
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
     user_id = call.from_user.id
