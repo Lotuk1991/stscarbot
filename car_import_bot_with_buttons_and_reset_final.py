@@ -491,14 +491,30 @@ async def send_pdf(call: types.CallbackQuery):
 
     result, breakdown = calculate_import(user_data[user_id])
     auction = user_data[user_id].get("auction", "—")
-
+    user_reports[user_id].append((result, breakdown))
+    
     buffer = io.BytesIO()
     generate_import_pdf(breakdown, result, buffer, auction=auction)
     buffer.seek(0)
     buffer.name = "import_report.pdf"
 
     await bot.send_document(call.message.chat.id, InputFile(buffer))
+@dp.message_handler(commands=["history"])
+async def show_history(message: types.Message):
+    user_id = message.from_user.id
+    reports = user_reports.get(user_id, [])
+    if not reports:
+        await message.answer("Історія розрахунків порожня.")
+        return
 
+    text = ""
+    for i, (res, data) in enumerate(reports, 1):
+        text += f"<b>Розрахунок {i}</b>\n"
+        for k, v in data.items():
+            text += f"{k}: {v}\n"
+        text += f"<b>До сплати:</b> ${res:,.0f}\n\n"
+
+    await message.answer(text, parse_mode="HTML")
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
