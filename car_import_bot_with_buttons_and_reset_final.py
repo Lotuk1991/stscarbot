@@ -43,18 +43,13 @@ def get_auction_keyboard():
 def create_location_buttons(page=0, page_size=30):
     locations = list(delivery_dict.keys())
     page_locations = locations[page * page_size:(page + 1) * page_size]
-    markup = InlineKeyboardMarkup(row_width=2)  # Дві кнопки в ряд
-
-    buttons = []
-    for location in page_locations:
-        buttons.append(InlineKeyboardButton(location, callback_data=f"loc_{location}"))
-
-    # Додаємо по два в ряд
+    markup = InlineKeyboardMarkup(row_width=2)
+    
+    buttons = [InlineKeyboardButton(location, callback_data=f"loc_{location}") for location in page_locations]
     for i in range(0, len(buttons), 2):
-        row = buttons[i:i+2]
-        markup.row(*row)
+        markup.row(*buttons[i:i+2])  # отображать в 2 колонки
 
-    # Кнопки навігації
+    # Кнопки навигации
     nav_buttons = []
     if page > 0:
         nav_buttons.append(InlineKeyboardButton("⬅️ Назад", callback_data=f"page_{page-1}"))
