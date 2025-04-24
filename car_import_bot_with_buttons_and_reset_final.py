@@ -493,15 +493,15 @@ async def show_history(message: types.Message):
         return
 
     text = ""
-for i, (res, data) in enumerate(reports, 1):
-    text += f"<b>Розрахунок {i}</b>\n"
-    for k, v in data.items():
-        if isinstance(v, float):
-            val = f"{round(v):,}"
-        else:
-            val = v
-        text += f"{k}: {val}\n"
-    text += f"<b>До сплати:</b> ${round(res):,}\n\n"
+    for i, (res, data) in enumerate(reports, 1):
+        text += f"<b>Розрахунок {i}</b>\n"
+        for k, v in data.items():
+            if isinstance(v, float):
+                val = f"{round(v):,}"
+            else:
+                val = v
+            text += f"{k}: {val}\n"
+        text += f"<b>До сплати:</b> ${round(res):,}\n\n"
     await message.answer(text, parse_mode="HTML")
 # === Запуск бота ===
 if __name__ == '__main__':
