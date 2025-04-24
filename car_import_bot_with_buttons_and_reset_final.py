@@ -218,16 +218,20 @@ async def choose_volume(call: types.CallbackQuery):
         # Формируем текст результата
                 # Формируем текст результата
         try:
-            text_lines = []
+            text_lines = ["<b>📋 Результат розрахунку:</b>\n"]
+
             for k, v in breakdown.items():
-                if "Год выпуска" in k or "Рік випуску" in k:
-                    text_lines.append(f"{k}: {v}")
-                elif isinstance(v, (int, float)):
-                    text_lines.append(f"{k}: ${v:,.0f}")
+                val = f"${round(v):,}" if isinstance(v, (int, float)) else v
+
+                if "Ціна авто" in k:
+                    text_lines.append(f"🚗 <b>{k}:</b> <b>{val}</b>")
+                elif "Митні платежі" in k:
+                    text_lines.append(f"💰 <b>{k}:</b> <b>{val}</b>")
                 else:
-                    text_lines.append(f"{k}: {v}")
+            text_lines.append(f"{k}: {val}")
+
+            text_lines.append(f"\n<b>✅ Підсумкова сума:</b> <b>${round(result):,}</b>")
             text = "\n".join(text_lines)
-            text += f"\n\n*Підсумкова сума:* ${result:,.0f}"
         except Exception as e:
             await call.message.answer(f"Сталася помилка під час розрахунку:\n{e}")
             return
