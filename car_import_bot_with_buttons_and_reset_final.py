@@ -219,14 +219,15 @@ async def choose_volume(call: types.CallbackQuery):
                 # Формируем текст результата
         try:
             text_lines = []
-        for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
-        text = "\n".join(text_lines)
-        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
-
+            for k, v in breakdown.items():
+                if "Год выпуска" in k or "Рік випуску" in k:
+                    text_lines.append(f"{k}: {v}")
+                elif isinstance(v, (int, float)):
+                    text_lines.append(f"{k}: ${v:,.0f}")
+                else:
+                    text_lines.append(f"{k}: {v}")
+            text = "\n".join(text_lines)
+            text += f"\n\n*Підсумкова сума:* ${result:,.0f}"
         except Exception as e:
             await call.message.answer(f"Сталася помилка під час розрахунку:\n{e}")
             return
@@ -495,12 +496,9 @@ async def show_history(message: types.Message):
     for i, (res, data) in enumerate(reports, 1):
         text += f"<b>Розрахунок {i}</b>\n"
         for k, v in data.items():
-            if isinstance(v, float):
-                val = f"{round(v):,}"
-            else:
-                val = v
-            text += f"{k}: {val}\n"
-        text += f"<b>До сплати:</b> ${round(res):,}\n\n"
+            text += f"{k}: {v}\n"
+        text += f"<b>До сплати:</b> ${res:,.0f}\n\n"
+
     await message.answer(text, parse_mode="HTML")
 # === Запуск бота ===
 if __name__ == '__main__':
