@@ -79,7 +79,7 @@ for year in range(2010, 2026):
     buttons.append(InlineKeyboardButton(str(year), callback_data=f"year_{year}"))
 for i in range(0, len(buttons), 3):
     markup.row(*buttons[i:i+3])
-    return markup
+    
 
 def get_engine_volume_keyboard():
     markup = InlineKeyboardMarkup(row_width=3)
@@ -87,7 +87,6 @@ def get_engine_volume_keyboard():
 buttons = [InlineKeyboardButton(str(v), callback_data=f"vol_{v}") for v in volumes]
 for i in range(0, len(buttons), 3):
     markup.row(*buttons[i:i+3])
-    return markup
 
 # Обработчики
 @dp.callback_query_handler(lambda c: c.data == "ask_expert")
