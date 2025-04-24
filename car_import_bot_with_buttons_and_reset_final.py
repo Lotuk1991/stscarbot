@@ -192,15 +192,14 @@ async def choose_fuel(call: types.CallbackQuery):
     else:
         if call.data == 'electric':
             await call.message.answer(
-                "Выбери год выпуска:",
-                reply_markup=get_year_keyboard()
-            )
-        else:
-            await call.message.answer(
                 "Выбери мощность электромобиля (кВт):",
                 reply_markup=get_power_kw_keyboard()
             )
-            
+        else:
+            await call.message.answer(
+                "Выбери год выпуска:",
+                reply_markup=get_year_keyboard()
+            )
 @dp.callback_query_handler(lambda c: c.data.startswith('year_'))
 async def choose_year(call: types.CallbackQuery):
     user_id = call.from_user.id
