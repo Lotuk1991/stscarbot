@@ -332,7 +332,7 @@ def calculate_import(data):
     cert = data.get('cert', 150)
     stscars = data.get('stscars', 0)
 
-    price = data['price']
+    Price = data['price']
     volume = data['engine_volume']
     year = data['year']
     fuel = data['fuel']
