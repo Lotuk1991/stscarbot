@@ -79,17 +79,7 @@ def get_engine_volume_keyboard():
 async def handle_expert_request(call: types.CallbackQuery):
     user_data[call.from_user.id]["expecting_question"] = True
     await call.message.answer("✍️ Напишіть ваше питання, і експерт зв'яжеться з вами.")
-@dp.message_handler()
-async def forward_to_expert(message: types.Message):
-    user_id = message.from_user.id
-    if user_data[user_id].get("expecting_question"):
-        expert_chat_id = 422284478  # твой Telegram ID
-        await bot.send_message(
-            expert_chat_id,
-            f"📩 Питання від @{message.from_user.username or message.from_user.full_name}:\n\n{message.text}"
-        )
-        await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
-        user_data[user_id]["expecting_question"] = False
+
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     user_data[message.from_user.id] = {}
@@ -520,6 +510,17 @@ async def show_history(message: types.Message):
         text += f"<b>До сплати:</b> ${res:,.0f}\n\n"
 
     await message.answer(text, parse_mode="HTML")
+@dp.message_handler()
+async def forward_to_expert(message: types.Message):
+    user_id = message.from_user.id
+    if user_data[user_id].get("expecting_question"):
+        expert_chat_id = 422284478  # твой Telegram ID
+        await bot.send_message(
+            expert_chat_id,
+            f"📩 Питання від @{message.from_user.username or message.from_user.full_name}:\n\n{message.text}"
+        )
+        await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
+        user_data[user_id]["expecting_question"] = False
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
