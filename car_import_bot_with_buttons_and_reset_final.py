@@ -593,3 +593,84 @@ async def forward_to_expert(message: types.Message):
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
+
+# === PATCHED EDIT LOGIC ===
+
+@dp.message_handler(lambda message: message.text.isdigit(), state="edit_price")
+async def save_edited_price(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    user_data[user_id]["price"] = int(message.text)
+    await state.finish()
+    await show_final_result(message, user_id)
+
+@dp.message_handler(state="edit_location")
+async def save_edited_location(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    user_data[user_id]["location"] = message.text
+    await state.finish()
+    await show_final_result(message, user_id)
+
+@dp.message_handler(state="edit_fuel")
+async def save_edited_fuel(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    user_data[user_id]["fuel"] = message.text
+    await state.finish()
+    await show_final_result(message, user_id)
+
+@dp.message_handler(state="edit_year")
+async def save_edited_year(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    user_data[user_id]["year"] = int(message.text)
+    await state.finish()
+    await show_final_result(message, user_id)
+
+@dp.message_handler(state="edit_volume")
+async def save_edited_volume(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    user_data[user_id]["engine_volume"] = float(message.text)
+    await state.finish()
+    await show_final_result(message, user_id)
+
+@dp.message_handler(state="edit_power_kw")
+async def save_edited_power_kw(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    user_data[user_id]["power_kw"] = int(message.text)
+    await state.finish()
+    await show_final_result(message, user_id)
+
+async def show_final_result(message, user_id):
+    required = ["price", "location", "fuel", "year"]
+    if user_data[user_id].get("fuel") == "electric":
+        required.append("power_kw")
+    else:
+        required.append("engine_volume")
+
+    if all(k in user_data[user_id] for k in required):
+        result, breakdown = calculate_import(user_data[user_id])
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.0f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("⚡ Потужність (кВт)", callback_data="edit_power_kw"),
+            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
+        )
+        await message.answer(text, reply_markup=markup, parse_mode="Markdown")
+    else:
+        await message.answer("Значення збережено.")
