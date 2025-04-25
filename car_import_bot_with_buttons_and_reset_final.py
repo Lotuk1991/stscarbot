@@ -325,20 +325,20 @@ async def choose_power_kw(call: types.CallbackQuery):
 # Функция расчета импортных пошлин и стоимости
 
 def calculate_import(data):
-    
     expeditor = data.get('expeditor', 350)
     broker = data.get('broker', 150)
     delivery_ua = data.get('delivery_ua', 1000)
     cert = data.get('cert', 150)
     stscars = data.get('stscars', 0)
 
-    Price = data['price']
-    volume = data['engine_volume']
+    price = data['price']
     year = data['year']
     fuel = data['fuel']
     is_electric = fuel == 'electric'
     location = data['location']
     auction = data['auction']
+
+    euro_to_usd_fixed = 1.1
 
     # Правильный возраст авто
     if year >= 2023:
@@ -356,65 +356,66 @@ def calculate_import(data):
     customs_base = price + auction_fee + 1600
     invoice_fee = (price + auction_fee + delivery_dict[location]) * 0.05
 
-    # Пенсионный фонд: по курсу 40.5 грн
-    grn_price = customs_base * 40.5
-    if grn_price < 499620:
-        pension_percent = 0.03
-    elif grn_price <= 878120:
-        pension_percent = 0.04
-    else:
-        pension_percent = 0.05
-    pension = customs_base * pension_percent
-
-    # Акциз
+    # Электро: мощность в кВт
     if is_electric:
         power_kw = data.get('power_kw', 0)
-        excise_eur = power_kw  # 1 евро за 1 кВт
+        excise_eur = power_kw * 1.1
         excise = excise_eur * euro_to_usd_fixed
         import_duty = 0
         vat = 0
         pension = 0
         volume_display = f"{power_kw} кВт"
-    elif fuel in ['hybrid', 'gasoline']:
-        rate = 50 if volume <= 3.0 else 100
-        excise_eur = rate * volume * age
-    elif fuel == 'diesel':
-        rate = 75 if volume <= 3.5 else 150
-        excise_eur = rate * volume * age
     else:
-        excise_eur = 0  # на всякий случай
+        volume = data['engine_volume']
+        volume_display = f"{volume} л"
 
-    euro_to_usd_fixed = 1.1
-    excise = excise_eur * euro_to_usd_fixed
+        if fuel in ['hybrid', 'gasoline']:
+            rate = 50 if volume <= 3.0 else 100
+            excise_eur = rate * volume * age
+        elif fuel == 'diesel':
+            rate = 75 if volume <= 3.5 else 150
+            excise_eur = rate * volume * age
+        else:
+            excise_eur = 0
 
-    import_duty = customs_base * 0.10
-    vat = (customs_base + import_duty + excise) * 0.20
+        excise = excise_eur * euro_to_usd_fixed
+        import_duty = customs_base * 0.10
+        vat = (customs_base + import_duty + excise) * 0.20
+
+        grn_price = customs_base * 40.5
+        if grn_price < 499620:
+            pension_percent = 0.03
+        elif grn_price <= 878120:
+            pension_percent = 0.04
+        else:
+            pension_percent = 0.05
+        pension = customs_base * pension_percent
 
     total = price + auction_fee + delivery + import_duty + excise + vat + \
             expeditor + broker + delivery_ua + cert + pension + 100 + invoice_fee + stscars
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
-    'Ціна авто': price,
-    'Аукціонний збір': auction_fee,
-    'Локація': location,
-    'Доставка до Клайпеди': delivery,
-    'Комісія за оплату інвойсу (5%)': invoice_fee,
-    'Тип пального': fuel.capitalize(),
-    'Обʼєм двигуна': f"{volume} л",
-    'Рік випуску': year,
-    'Ввізне мито (10%)': import_duty,
-    'Акциз (EUR, перерахований в USD)': excise,
-    'ПДВ (20%)': vat,
-    'Митні платежі (всього)': tamozhnya_total,
-    'Експедитор (Литва)': expeditor,
-    'Брокерські послуги': broker,
-    'Доставка в Україну': delivery_ua,
-    'Сертифікація': cert,
-    f'Пенсійний фонд ({int(pension_percent * 100)}%)': pension,
-    'МРЕВ (постановка на облік)': 100,
-    'Послуги компанії': stscars,
-}
+        'Ціна авто': price,
+        'Аукціонний збір': auction_fee,
+        'Локація': location,
+        'Доставка до Клайпеди': delivery,
+        'Комісія за оплату інвойсу (5%)': invoice_fee,
+        'Тип пального': fuel.capitalize(),
+        'Обʼєм двигуна': volume_display,
+        'Рік випуску': year,
+        'Ввізне мито (10%)': import_duty,
+        'Акциз (EUR, перерахований в USD)': excise,
+        'ПДВ (20%)': vat,
+        'Митні платежі (всього)': tamozhnya_total,
+        'Експедитор (Литва)': expeditor,
+        'Брокерські послуги': broker,
+        'Доставка в Україну': delivery_ua,
+        'Сертифікація': cert,
+        'Пенсійний фонд': pension,
+        'МРЕВ (постановка на облік)': 100,
+        'Послуги компанії': stscars,
+    }
 
     return total, breakdown
 
