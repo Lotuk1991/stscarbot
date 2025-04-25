@@ -497,7 +497,7 @@ async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
     await call.message.answer("Почнемо спочатку. Обери аукціон:", reply_markup=get_auction_keyboard())
 
-@@dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
+@dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
