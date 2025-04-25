@@ -505,69 +505,46 @@ async def handle_numeric_input(msg: types.Message):
     if 'edit_field' in user_data[user_id]:
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
-    else:
-        # Первичный ввод
-        if 'price' not in user_data[user_id]:
-            user_data[user_id]['price'] = value
-            await msg.answer("Обери локацію:", reply_markup=create_location_buttons())
-            return
-        elif 'delivery_price' not in user_data[user_id]:
-            user_data[user_id]['delivery_price'] = value
-            await msg.answer("Обери тип пального:", reply_markup=get_fuel_keyboard())
-            return
-        elif 'year' not in user_data[user_id]:
-            user_data[user_id]['year'] = int(value)
+
+        # Автоматический переход к следующему шагу (только если НЕ режим редактирования)
+        if field in ['price', 'delivery_price', 'fuel', 'year', 'engine_volume', 'power_kw']:
+            # пересчёт после редактирования
             fuel = user_data[user_id].get('fuel')
-            if fuel == 'electric':
-                await msg.answer("Обери потужність (кВт):", reply_markup=get_power_kw_keyboard())
+            required = ['price', 'location', 'fuel', 'year']
+            required.append('power_kw' if fuel == 'electric' else 'engine_volume')
+
+            if all(key in user_data[user_id] for key in required):
+                result, breakdown = calculate_import(user_data[user_id])
+                text_lines = []
+                for k, v in breakdown.items():
+                    if isinstance(v, (int, float)):
+                        text_lines.append(f"{k}: ${v:.0f}")
+                    else:
+                        text_lines.append(f"{k}: {v}")
+                text = "\n".join(text_lines)
+                text += f"\n\n*Підсумкова сума:* ${result:.0f}"
+
+                markup = InlineKeyboardMarkup(row_width=2)
+                markup.add(
+                    InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+                    InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
+                    InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
+                    InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
+                    InlineKeyboardButton("⚡ Потужність (кВт)" if fuel == 'electric' else "🛠 Обʼєм", callback_data="edit_volume"),
+                    InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
+                    InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+                    InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
+                    InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
+                    InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+                    InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+                    InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
+                )
+
+                await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
             else:
-                await msg.answer("Обери обʼєм двигуна:", reply_markup=get_engine_volume_keyboard())
-            return
-        elif 'engine_volume' not in user_data[user_id] and user_data[user_id].get('fuel') != 'electric':
-            user_data[user_id]['engine_volume'] = value
-        elif 'power_kw' not in user_data[user_id] and user_data[user_id].get('fuel') == 'electric':
-            user_data[user_id]['power_kw'] = value
-
-    # Проверка необходимых полей
-    required = ['price', 'location', 'fuel', 'year']
-    if user_data[user_id].get('fuel') == 'electric':
-        required.append('power_kw')
-    else:
-        required.append('engine_volume')
-
-    if all(k in user_data[user_id] for k in required):
-        result, breakdown = calculate_import(user_data[user_id])
-        text_lines = []
-        for k, v in breakdown.items():
-            if "Рік" in k:
-                text_lines.append(f"{k}: {v}")
-            elif isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
-        text = "\n".join(text_lines)
-        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
-
-        markup = InlineKeyboardMarkup(row_width=2)
-        markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
-            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
-            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм/Потужність", callback_data="edit_volume"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
-            InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
-            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
-            InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
-        )
-
-        await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
-    else:
-        await msg.answer("Значення збережено.")
+                await msg.answer("Значення збережено.")
+        else:
+            await msg.answer("Значення збережено.")
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
     user_id = call.from_user.id
