@@ -293,16 +293,16 @@ async def choose_power_kw(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'power_kw']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-    text_lines = []
-    for k, v in breakdown.items():
-        if "Рік випуску" in k or "Год выпуска" in k:
-            text_lines.append(f"{k}: {v}")  # без доллара
-        elif isinstance(v, (int, float)):
-            text_lines.append(f"{k}: ${v:,.0f}")
-        else:
-            text_lines.append(f"{k}: {v}")
-    text = "\n".join(text_lines)
-    text += f"\n\n*Підсумкова сума:* ${result:,.0f}"
+        text_lines = []
+        for k, v in breakdown.items():
+            if "Рік випуску" in k or "Год выпуска" in k:
+                text_lines.append(f"{k}: {v}")  # без доллара
+            elif isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:,.0f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Підсумкова сума:* ${result:,.0f}"
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
