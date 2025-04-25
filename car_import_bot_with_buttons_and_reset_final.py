@@ -288,9 +288,12 @@ async def choose_volume(call: types.CallbackQuery):
 async def choose_power_kw(call: types.CallbackQuery):
     user_id = call.from_user.id
     power_kw = int(call.data[3:])
-    user_data[user_id]['power_kw'] = power_kw  # сохраняем как объем двигателя
+    user_data[user_id]['power_kw'] = power_kw
 
-    required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+    # DEBUG: проверим, что всё записано
+    await call.message.answer(f"DEBUG after power_kw:\n{user_data[user_id]}")
+
+    required = ['price', 'location', 'fuel', 'year', 'power_kw']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
         text_lines = []
@@ -307,18 +310,15 @@ async def choose_power_kw(call: types.CallbackQuery):
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм/кВт", callback_data="edit_volume"),
+            InlineKeyboardButton("⚡ Потужність (кВт)", callback_data="edit_volume"),
             InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
-            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
-            InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
+            InlineKeyboardButton("📦 Скинути", callback_data="reset")
         )
-
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
         await call.message.answer("Дані не повні.")
@@ -592,44 +592,6 @@ async def forward_to_expert(message: types.Message):
         await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
         user_data[user_id]["expecting_question"] = False
         
-@dp.callback_query_handler(lambda c: c.data.startswith('kw_'))
-async def choose_power_kw(call: types.CallbackQuery):
-    user_id = call.from_user.id
-    power_kw = int(call.data[3:])
-    user_data[user_id]['power_kw'] = power_kw
-
-    # DEBUG: проверим, что всё записано
-    await call.message.answer(f"DEBUG after power_kw:\n{user_data[user_id]}")
-
-    required = ['price', 'location', 'fuel', 'year', 'power_kw']
-    if all(key in user_data[user_id] for key in required):
-        result, breakdown = calculate_import(user_data[user_id])
-        text_lines = []
-        for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
-        text = "\n".join(text_lines)
-        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
-
-        markup = InlineKeyboardMarkup(row_width=2)
-        markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
-            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
-            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-            InlineKeyboardButton("⚡ Потужність (кВт)", callback_data="edit_volume"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
-            InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
-            InlineKeyboardButton("📦 Скинути", callback_data="reset")
-        )
-        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
-    else:
-        await call.message.answer("Дані не повні.")
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
