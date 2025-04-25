@@ -503,11 +503,11 @@ async def handle_numeric_input(msg: types.Message):
     value = float(msg.text)
 
     if 'edit_field' in user_data[user_id]:
-        # режим редактирования
+        # Это редактирование
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
 
-        # Пересчёт и вывод результата
+        # После редактирования пересчитываем
         fuel = user_data[user_id].get('fuel')
         required = ['price', 'location', 'fuel', 'year']
         required.append('power_kw' if fuel == 'electric' else 'engine_volume')
@@ -538,14 +538,12 @@ async def handle_numeric_input(msg: types.Message):
                 InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
                 InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
             )
-
             await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
-        return
 
     else:
-        # обычный ввод (не редактирование!)
+        # Новый расчёт: после цены — выбор локации
         user_data[user_id]['price'] = value
-        await msg.answer("Обери локацію:", reply_markup=create_location_buttons())
+        await msg.answer("Вибери локацію:", reply_markup=create_location_buttons())
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
     user_id = call.from_user.id
