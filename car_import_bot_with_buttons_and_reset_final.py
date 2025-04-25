@@ -84,13 +84,6 @@ def get_engine_volume_keyboard():
     for i in range(0, len(buttons), 3):
         markup.row(*buttons[i:i+3])
     return markup
-    
-def get_power_kw_keyboard():
-    markup = InlineKeyboardMarkup(row_width=3)
-    for kw in range(30, 131, 10):
-        markup.add(InlineKeyboardButton(f"{kw} кВт", callback_data=f"kw_{kw}"))
-    return markup
-    
 # Обработчики
 @dp.callback_query_handler(lambda c: c.data == "ask_expert")
 async def handle_expert_request(call: types.CallbackQuery):
@@ -190,15 +183,12 @@ async def choose_fuel(call: types.CallbackQuery):
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await call.message.answer("Вибери рік випуску:", reply_markup=get_year_keyboard())
-            
+        await call.message.answer("Рік випуску:", reply_markup=get_year_keyboard())
 @dp.callback_query_handler(lambda c: c.data.startswith('year_'))
 async def choose_year(call: types.CallbackQuery):
     user_id = call.from_user.id
     year = int(call.data[5:])
     user_data[user_id]['year'] = year
-
-    fuel = user_data[user_id].get('fuel')
 
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
@@ -231,10 +221,7 @@ async def choose_year(call: types.CallbackQuery):
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        if fuel == 'electric':
-            await call.message.answer("Обери потужність авто (кВт):", reply_markup=get_power_kw_keyboard())
-        else:
-            await call.message.answer("Обери обʼєм двигуна:", reply_markup=get_engine_volume_keyboard())
+        await call.message.answer("Обери обʼєм двигуна:", reply_markup=get_engine_volume_keyboard())
 @dp.callback_query_handler(lambda c: c.data.startswith('vol_'))
 async def choose_volume(call: types.CallbackQuery):
     try:
@@ -283,75 +270,7 @@ async def choose_volume(call: types.CallbackQuery):
 
     except Exception as e:
         await call.message.answer(f"Сталася помилка під час розрахунку::\n`{e}`", parse_mode="Markdown")
-        
-@dp.callback_query_handler(lambda c: c.data.startswith('kw_'))
-async def choose_power_kw(call: types.CallbackQuery):
-    user_id = call.from_user.id
-    power_kw = int(call.data[3:])
-    user_data[user_id]['power_kw'] = power_kw
 
-    required = ['price', 'location', 'fuel', 'year', 'power_kw']
-    if all(key in user_data[user_id] for key in required):
-        result, breakdown = calculate_import(user_data[user_id])
-
-        def safe_get(key):
-            return f"${breakdown.get(key, 0):,.0f}" if isinstance(breakdown.get(key), (int, float)) else breakdown.get(key, '-')
-
-        text = f"""
-**🚗 Ціна авто:** {safe_get('Ціна авто')}  
-**🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}  
-**📍 Локація:** {safe_get('Локація')}  
-**🚢 Доставка до Клайпеди:** {safe_get('Доставка до Клайпеди')}  
-**💳 Комісія за інвойс (5%):** {safe_get('Комісія за оплату інвойсу (5%)')}  
-
-**⚡ Тип пального:** {safe_get('Тип пального')}  
-**🔋 Потужність / Обʼєм:** {safe_get('Обʼєм двигуна')}  
-**📅 Рік випуску:** {safe_get('Рік випуску')}  
-
----
-
-**🛃 Митні платежі:**  
-**🔒 Ввізне мито (10%):** {safe_get('Ввізне мито (10%)')}  
-**💥 Акциз:** {safe_get('Акциз (EUR, перерахований в USD)')}  
-**🧾 ПДВ (20%)**: {safe_get('ПДВ (20%)')}  
-**📦 Всього:** {safe_get('Митні платежі (всього)')}  
-
----
-
-**💼 Додаткові витрати:**  
-**🚛 Експедитор (Литва):** {safe_get('Експедитор (Литва)')}  
-**🤝 Брокер:** {safe_get('Брокерські послуги')}  
-**🚚 Доставка в Україну:** {safe_get('Доставка в Україну')}  
-**🛠 Сертифікація:** {safe_get('Сертифікація')}  
-**🏛 Пенсійний фонд:** {safe_get(next((k for k in breakdown if 'Пенсійний фонд' in k), 'Пенсійний фонд'))}  
-**📄 МРЕВ:** $100  
-**🏢 Послуги компанії:** {safe_get('Послуги компанії')}  
-
----
-
-**✅ *Підсумкова сума:*** ${result:,.0f}
-"""
-
-        markup = InlineKeyboardMarkup(row_width=2)
-        markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
-            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
-            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-            InlineKeyboardButton("⚡ Потужність (кВт)", callback_data="edit_volume"),
-            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
-            InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
-            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
-            InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
-        )
-
-        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
-    else:
-        await call.message.answer("Недостатньо даних для розрахунку.")
 # Функция расчета импортных пошлин и стоимости
 
 def calculate_import(data):
@@ -362,13 +281,11 @@ def calculate_import(data):
     stscars = data.get('stscars', 0)
 
     price = data['price']
+    volume = data['engine_volume']
     year = data['year']
     fuel = data['fuel']
-    is_electric = fuel == 'electric'
     location = data['location']
     auction = data['auction']
-
-    euro_to_usd_fixed = 1.1
 
     # Правильный возраст авто
     if year >= 2023:
@@ -386,66 +303,59 @@ def calculate_import(data):
     customs_base = price + auction_fee + 1600
     invoice_fee = (price + auction_fee + delivery_dict[location]) * 0.05
 
-    # Электро: мощность в кВт
-    if is_electric:
-        power_kw = data.get('power_kw', 0)
-        excise_eur = power_kw * 1.1
-        excise = excise_eur * euro_to_usd_fixed
-        import_duty = 0
-        vat = 0
-        pension = 0
-        volume_display = f"{power_kw} кВт"
+    # Пенсионный фонд: по курсу 40.5 грн
+    grn_price = customs_base * 40.5
+    if grn_price < 499620:
+        pension_percent = 0.03
+    elif grn_price <= 878120:
+        pension_percent = 0.04
     else:
-        volume = data['engine_volume']
-        volume_display = f"{volume} л"
+        pension_percent = 0.05
+    pension = customs_base * pension_percent
 
-        if fuel in ['hybrid', 'gasoline']:
-            rate = 50 if volume <= 3.0 else 100
-            excise_eur = rate * volume * age
-        elif fuel == 'diesel':
-            rate = 75 if volume <= 3.5 else 150
-            excise_eur = rate * volume * age
-        else:
-            excise_eur = 0
+    # Акциз
+    if fuel == 'electric':
+        excise_eur = 1 * age
+    elif fuel in ['hybrid', 'gasoline']:
+        rate = 50 if volume <= 3.0 else 100
+        excise_eur = rate * volume * age
+    elif fuel == 'diesel':
+        rate = 75 if volume <= 3.5 else 150
+        excise_eur = rate * volume * age
+    else:
+        excise_eur = 0  # на всякий случай
 
-        excise = excise_eur * euro_to_usd_fixed
-        import_duty = customs_base * 0.10
-        vat = (customs_base + import_duty + excise) * 0.20
+    euro_to_usd_fixed = 1.1
+    excise = excise_eur * euro_to_usd_fixed
 
-        grn_price = customs_base * 40.5
-        if grn_price < 499620:
-            pension_percent = 0.03
-        elif grn_price <= 878120:
-            pension_percent = 0.04
-        else:
-            pension_percent = 0.05
-        pension = customs_base * pension_percent
+    import_duty = customs_base * 0.10
+    vat = (customs_base + import_duty + excise) * 0.20
 
     total = price + auction_fee + delivery + import_duty + excise + vat + \
             expeditor + broker + delivery_ua + cert + pension + 100 + invoice_fee + stscars
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
-        'Ціна авто': price,
-        'Аукціонний збір': auction_fee,
-        'Локація': location,
-        'Доставка до Клайпеди': delivery,
-        'Комісія за оплату інвойсу (5%)': invoice_fee,
-        'Тип пального': fuel.capitalize(),
-        'Обʼєм двигуна': volume_display,
-        'Рік випуску': year,
-        'Ввізне мито (10%)': import_duty,
-        'Акциз (EUR, перерахований в USD)': excise,
-        'ПДВ (20%)': vat,
-        'Митні платежі (всього)': tamozhnya_total,
-        'Експедитор (Литва)': expeditor,
-        'Брокерські послуги': broker,
-        'Доставка в Україну': delivery_ua,
-        'Сертифікація': cert,
-        'Пенсійний фонд': pension,
-        'МРЕВ (постановка на облік)': 50,
-        'Послуги компанії': stscars,
-    }
+    'Ціна авто': price,
+    'Аукціонний збір': auction_fee,
+    'Локація': location,
+    'Доставка до Клайпеди': delivery,
+    'Комісія за оплату інвойсу (5%)': invoice_fee,
+    'Тип пального': fuel.capitalize(),
+    'Обʼєм двигуна': f"{volume} л",
+    'Рік випуску': year,
+    'Ввізне мито (10%)': import_duty,
+    'Акциз (EUR, перерахований в USD)': excise,
+    'ПДВ (20%)': vat,
+    'Митні платежі (всього)': tamozhnya_total,
+    'Експедитор (Литва)': expeditor,
+    'Брокерські послуги': broker,
+    'Доставка в Україну': delivery_ua,
+    'Сертифікація': cert,
+    f'Пенсійний фонд ({int(pension_percent * 100)}%)': pension,
+    'МРЕВ (постановка на облік)': 100,
+    'Послуги компанії': stscars,
+}
 
     return total, breakdown
 
@@ -502,54 +412,81 @@ async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
 
-    # Если пользователь редактирует значение
     if 'edit_field' in user_data[user_id]:
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
 
-        # Пересчитать и показать сразу
-        fuel = user_data[user_id].get('fuel')
-        required = ['price', 'location', 'fuel', 'year']
-        required.append('power_kw' if fuel == 'electric' else 'engine_volume')
+        # Переход к следующему этапу по порядку
+        if field == 'price':
+            await msg.answer("Оберіть локацію:", reply_markup=create_location_buttons())
+        elif field == 'delivery_price':
+            await msg.answer("Оберіть тип пального:", reply_markup=get_fuel_keyboard())
+        elif field == 'fuel':
+            await msg.answer("Оберіть рік випуску:", reply_markup=get_year_keyboard())
+        elif field == 'year':
+            await msg.answer("Оберіть обʼєм двигуна:", reply_markup=get_engine_volume_keyboard())
+        elif field == 'engine_volume':
+    # Дальше по коду...
+            # Если всё заполнено — делаем расчёт
+            required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+            if all(key in user_data[user_id] for key in required):
+                result, breakdown = calculate_import(user_data[user_id])
+                text_lines = []
+                for k, v in breakdown.items():
+                    if isinstance(v, (int, float)):
+                        text_lines.append(f"{k}: ${v:.0f}")
+                    else:
+                        text_lines.append(f"{k}: {v}")
+                text = "\n".join(text_lines)
+                text += f"\n\n*Итоговая сумма:* ${result:.0f}"
 
-        if all(key in user_data[user_id] for key in required):
-            result, breakdown = calculate_import(user_data[user_id])
-            text_lines = []
-            for k, v in breakdown.items():
-                if isinstance(v, (int, float)):
-                    text_lines.append(f"{k}: ${v:.0f}")
-                else:
-                    text_lines.append(f"{k}: {v}")
-            text = "\n".join(text_lines)
-            text += f"\n\n*Підсумкова сума:* ${result:.0f}"
+                markup = InlineKeyboardMarkup(row_width=2)
+                markup.add(
+            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
+            InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
+        )
+                await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
+        else:
+            # Если это не один из этапов — просто обновим и посчитаем заново
+            required = ['price', 'location', 'fuel', 'year', 'engine_volume']
+            if all(key in user_data[user_id] for key in required):
+                result, breakdown = calculate_import(user_data[user_id])
+                text_lines = []
+                for k, v in breakdown.items():
+                    if isinstance(v, (int, float)):
+                        text_lines.append(f"{k}: ${v:.0f}")
+                    else:
+                        text_lines.append(f"{k}: {v}")
+                text = "\n".join(text_lines)
+                text += f"\n\n*Підсумкова сума:* ${result:.0f}"
 
-            markup = InlineKeyboardMarkup(row_width=2)
-            markup.add(
-                InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
-                InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
-                InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-                InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-                InlineKeyboardButton(
-                    "⚡ Потужність (кВт)" if fuel == 'electric' else "🛠 Обʼєм",
-                    callback_data="edit_volume"
-                ),
-                InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-                InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-                InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-                InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-                InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
-                InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
-                InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
-            )
-            await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
-        return
-
-    # Пошаговое заполнение с нуля
-    if 'price' not in user_data[user_id]:
-        user_data[user_id]['price'] = value
-        await msg.answer("Обери локацію:", reply_markup=create_location_buttons())
-    else:
-        await msg.answer("Натисніть на кнопку для продовження.")
+                markup = InlineKeyboardMarkup(row_width=2)
+                markup.add(
+            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
+        )
+                await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
     user_id = call.from_user.id
@@ -594,7 +531,6 @@ async def forward_to_expert(message: types.Message):
         )
         await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
         user_data[user_id]["expecting_question"] = False
-        
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
