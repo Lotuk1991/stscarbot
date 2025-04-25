@@ -604,6 +604,10 @@ async def choose_power_kw(call: types.CallbackQuery):
     else:
         required.append('engine_volume')
 
+    # DEBUG: покажем, какие поля заполнены
+    print("DEBUG user_data:", user_data[user_id])
+    await call.message.answer(f"DEBUG:\n{user_data[user_id]}")
+
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
         text_lines = []
