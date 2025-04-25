@@ -1,4 +1,4 @@
-# Импорт необходимых библиотек
+а# Импорт необходимых библиотек
 import os
 import json
 import logging
@@ -293,16 +293,40 @@ async def choose_power_kw(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'power_kw']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text_lines = []
-        for k, v in breakdown.items():
-            if "Рік випуску" in k or "Год выпуска" in k:
-                text_lines.append(f"{k}: {v}")  # без доллара
-            elif isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:,.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
-        text = "\n".join(text_lines)
-        text += f"\n\n*Підсумкова сума:* ${result:,.0f}"
+        text = f"""
+**🚗 Ціна авто:** ${price:,.0f}  
+**🧾 Аукціонний збір:** ${auction_fee:,.0f}  
+**📍 Локація:** {location}  
+**🚢 Доставка до Клайпеди:** ${delivery:,.0f}  
+**💳 Комісія за інвойс (5%):** ${invoice_fee:,.0f}  
+
+**⚡ Тип пального:** {fuel.capitalize()}  
+**🔋 Потужність / Обʼєм:** {volume_display}  
+**📅 Рік випуску:** {year}  
+
+---
+
+**🛃 Митні платежі:**  
+**🔒 Ввізне мито (10%):** ${import_duty:,.0f}  
+**💥 Акциз:** ${excise:,.0f}  
+**🧾 ПДВ (20%):** ${vat:,.0f}  
+**📦 Всього:** ${tamozhnya_total:,.0f}  
+
+---
+
+**💼 Додаткові витрати:**  
+**🚛 Експедитор (Литва):** ${expeditor:,.0f}  
+**🤝 Брокер:** ${broker:,.0f}  
+**🚚 Доставка в Україну:** ${delivery_ua:,.0f}  
+**🛠 Сертифікація:** ${cert:,.0f}  
+**🏛 Пенсійний фонд:** ${pension:,.0f}  
+**📄 МРЕВ:** $100  
+**🏢 Послуги компанії:** ${stscars:,.0f}  
+
+---
+
+**✅ *Підсумкова сума:*** ${result:,.0f}
+"""
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
