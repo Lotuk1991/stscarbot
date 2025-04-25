@@ -541,10 +541,7 @@ async def handle_numeric_input(msg: types.Message):
                 )
 
                 await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
-            else:
-                await msg.answer("Значення збережено.")
-        else:
-            await msg.answer("Значення збережено.")
+        
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
     user_id = call.from_user.id
