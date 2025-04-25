@@ -289,39 +289,41 @@ async def choose_power_kw(call: types.CallbackQuery):
     user_id = call.from_user.id
     power_kw = int(call.data[3:])
     user_data[user_id]['power_kw'] = power_kw
-    
+
     required = ['price', 'location', 'fuel', 'year', 'power_kw']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text = f"""
-**🚗 Ціна авто:** ${price:,.0f}  
-**🧾 Аукціонний збір:** ${auction_fee:,.0f}  
-**📍 Локація:** {location}  
-**🚢 Доставка до Клайпеди:** ${delivery:,.0f}  
-**💳 Комісія за інвойс (5%):** ${invoice_fee:,.0f}  
 
-**⚡ Тип пального:** {fuel.capitalize()}  
-**🔋 Потужність / Обʼєм:** {volume_display}  
-**📅 Рік випуску:** {year}  
+        # Формируем красиво оформленный текст
+        text = f"""
+**🚗 Ціна авто:** ${breakdown['Ціна авто']:,.0f}  
+**🧾 Аукціонний збір:** ${breakdown['Аукціонний збір']:,.0f}  
+**📍 Локація:** {breakdown['Локація']}  
+**🚢 Доставка до Клайпеди:** ${breakdown['Доставка до Клайпеди']:,.0f}  
+**💳 Комісія за інвойс (5%):** ${breakdown['Комісія за оплату інвойсу (5%)']:,.0f}  
+
+**⚡ Тип пального:** {breakdown['Тип пального']}  
+**🔋 Потужність / Обʼєм:** {breakdown['Обʼєм двигуна']}  
+**📅 Рік випуску:** {breakdown['Рік випуску']}  
 
 ---
 
 **🛃 Митні платежі:**  
-**🔒 Ввізне мито (10%):** ${import_duty:,.0f}  
-**💥 Акциз:** ${excise:,.0f}  
-**🧾 ПДВ (20%):** ${vat:,.0f}  
-**📦 Всього:** ${tamozhnya_total:,.0f}  
+**🔒 Ввізне мито (10%):** ${breakdown['Ввізне мито (10%)']:,.0f}  
+**💥 Акциз:** ${breakdown['Акциз (EUR, перерахований в USD)']:,.0f}  
+**🧾 ПДВ (20%):** ${breakdown['ПДВ (20%)']:,.0f}  
+**📦 Всього:** ${breakdown['Митні платежі (всього)']:,.0f}  
 
 ---
 
 **💼 Додаткові витрати:**  
-**🚛 Експедитор (Литва):** ${expeditor:,.0f}  
-**🤝 Брокер:** ${broker:,.0f}  
-**🚚 Доставка в Україну:** ${delivery_ua:,.0f}  
-**🛠 Сертифікація:** ${cert:,.0f}  
-**🏛 Пенсійний фонд:** ${pension:,.0f}  
+**🚛 Експедитор (Литва):** ${breakdown['Експедитор (Литва)']:,.0f}  
+**🤝 Брокер:** ${breakdown['Брокерські послуги']:,.0f}  
+**🚚 Доставка в Україну:** ${breakdown['Доставка в Україну']:,.0f}  
+**🛠 Сертифікація:** ${breakdown['Сертифікація']:,.0f}  
+**🏛 Пенсійний фонд:** ${breakdown['Пенсійний фонд (0%)']:,.0f}  
 **📄 МРЕВ:** $100  
-**🏢 Послуги компанії:** ${stscars:,.0f}  
+**🏢 Послуги компанії:** ${breakdown['Послуги компанії']:,.0f}  
 
 ---
 
@@ -334,17 +336,20 @@ async def choose_power_kw(call: types.CallbackQuery):
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
             InlineKeyboardButton("⚡ Потужність (кВт)", callback_data="edit_volume"),
+            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
             InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
             InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
             InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
-            InlineKeyboardButton("📦 Скинути", callback_data="reset")
+            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
+            InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
+
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await call.message.answer("Дані не повні.")
+        await call.message.answer("Недостатньо даних для розрахунку.")
 # Функция расчета импортных пошлин и стоимости
 
 def calculate_import(data):
