@@ -502,8 +502,8 @@ async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
 
-    # Режим редактирования
     if 'edit_field' in user_data[user_id]:
+        # Режим редактирования
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
 
@@ -538,13 +538,12 @@ async def handle_numeric_input(msg: types.Message):
                 InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
                 InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
             )
-
             await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
         else:
-            await msg.answer("Поле оновлено.")
+            await msg.answer("Значення збережено.")
     else:
-        # Первый запуск – это шаг после выбора аукциона
-        user_data[user_id]['price'] = value
+        # Первый запуск — шаг после выбора аукциона
+        user_data.setdefault(user_id, {})['price'] = value
         await msg.answer("Обери локацію:", reply_markup=create_location_buttons())
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
