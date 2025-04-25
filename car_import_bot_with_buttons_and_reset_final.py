@@ -497,7 +497,52 @@ async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
     await call.message.answer("Почнемо спочатку. Обери аукціон:", reply_markup=get_auction_keyboard())
 
-@dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
+
+@dp.callback_query_handler(lambda c: c.data == "generate_pdf")
+async def send_pdf(call: types.CallbackQuery):
+    user_id = call.from_user.id
+    if user_id not in user_data:
+        await call.message.answer("Немає даних для генерації PDF.")
+        return
+
+    result, breakdown = calculate_import(user_data[user_id])
+    auction = user_data[user_id].get("auction", "—")
+    user_reports[user_id].append((result, breakdown))
+    
+    buffer = io.BytesIO()
+    generate_import_pdf(breakdown, result, buffer, auction=auction)
+    buffer.seek(0)
+    buffer.name = "import_report.pdf"
+
+    await bot.send_document(call.message.chat.id, InputFile(buffer))
+@dp.message_handler(commands=["history"])
+async def show_history(message: types.Message):
+    user_id = message.from_user.id
+    reports = user_reports.get(user_id, [])
+    if not reports:
+        await message.answer("Історія розрахунків порожня.")
+        return
+
+    text = ""
+    for i, (res, data) in enumerate(reports, 1):
+        text += f"<b>Розрахунок {i}</b>\n"
+        for k, v in data.items():
+            text += f"{k}: {v}\n"
+        text += f"<b>До сплати:</b> ${res:,.0f}\n\n"
+
+    await message.answer(text, parse_mode="HTML")
+@dp.message_handler()
+async def forward_to_expert(message: types.Message):
+    user_id = message.from_user.id
+    if user_data[user_id].get("expecting_question"):
+        expert_chat_id = 422284478  # твой Telegram ID
+        await bot.send_message(
+            expert_chat_id,
+            f"📩 Питання від @{message.from_user.username or message.from_user.full_name}:\n\n{message.text}"
+        )
+        await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
+        user_data[user_id]["expecting_question"] = False
+        @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
@@ -546,51 +591,6 @@ async def handle_numeric_input(msg: types.Message):
         # Первый запуск: пользователь вводит цену
         user_data[user_id]['price'] = value
         await msg.answer("Обери локацію:", reply_markup=create_location_buttons())
-@dp.callback_query_handler(lambda c: c.data == "generate_pdf")
-async def send_pdf(call: types.CallbackQuery):
-    user_id = call.from_user.id
-    if user_id not in user_data:
-        await call.message.answer("Немає даних для генерації PDF.")
-        return
-
-    result, breakdown = calculate_import(user_data[user_id])
-    auction = user_data[user_id].get("auction", "—")
-    user_reports[user_id].append((result, breakdown))
-    
-    buffer = io.BytesIO()
-    generate_import_pdf(breakdown, result, buffer, auction=auction)
-    buffer.seek(0)
-    buffer.name = "import_report.pdf"
-
-    await bot.send_document(call.message.chat.id, InputFile(buffer))
-@dp.message_handler(commands=["history"])
-async def show_history(message: types.Message):
-    user_id = message.from_user.id
-    reports = user_reports.get(user_id, [])
-    if not reports:
-        await message.answer("Історія розрахунків порожня.")
-        return
-
-    text = ""
-    for i, (res, data) in enumerate(reports, 1):
-        text += f"<b>Розрахунок {i}</b>\n"
-        for k, v in data.items():
-            text += f"{k}: {v}\n"
-        text += f"<b>До сплати:</b> ${res:,.0f}\n\n"
-
-    await message.answer(text, parse_mode="HTML")
-@dp.message_handler()
-async def forward_to_expert(message: types.Message):
-    user_id = message.from_user.id
-    if user_data[user_id].get("expecting_question"):
-        expert_chat_id = 422284478  # твой Telegram ID
-        await bot.send_message(
-            expert_chat_id,
-            f"📩 Питання від @{message.from_user.username or message.from_user.full_name}:\n\n{message.text}"
-        )
-        await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
-        user_data[user_id]["expecting_question"] = False
-        
 # === Запуск бота ===
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
