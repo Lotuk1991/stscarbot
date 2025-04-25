@@ -289,10 +289,7 @@ async def choose_power_kw(call: types.CallbackQuery):
     user_id = call.from_user.id
     power_kw = int(call.data[3:])
     user_data[user_id]['power_kw'] = power_kw
-
-    # DEBUG: проверим, что всё записано
-    await call.message.answer(f"DEBUG after power_kw:\n{user_data[user_id]}")
-
+    
     required = ['price', 'location', 'fuel', 'year', 'power_kw']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
