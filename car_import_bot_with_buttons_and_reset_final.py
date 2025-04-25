@@ -497,22 +497,19 @@ async def reset_data(call: types.CallbackQuery):
     user_data.pop(call.from_user.id, None)
     await call.message.answer("Почнемо спочатку. Обери аукціон:", reply_markup=get_auction_keyboard())
 
-@dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
+@@dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
 
+    # Режим редактирования
     if 'edit_field' in user_data[user_id]:
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
 
-        # После изменения значения сразу пересчитаем результат
         fuel = user_data[user_id].get('fuel')
         required = ['price', 'location', 'fuel', 'year']
-        if fuel == 'electric':
-            required.append('power_kw')
-        else:
-            required.append('engine_volume')
+        required.append('power_kw' if fuel == 'electric' else 'engine_volume')
 
         if all(key in user_data[user_id] for key in required):
             result, breakdown = calculate_import(user_data[user_id])
@@ -546,7 +543,7 @@ async def handle_numeric_input(msg: types.Message):
         else:
             await msg.answer("Поле оновлено.")
     else:
-        # Первый ввод цены, когда только начинаем
+        # Первый запуск – это шаг после выбора аукциона
         user_data[user_id]['price'] = value
         await msg.answer("Обери локацію:", reply_markup=create_location_buttons())
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
