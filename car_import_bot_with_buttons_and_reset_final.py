@@ -503,11 +503,10 @@ async def handle_numeric_input(msg: types.Message):
     value = float(msg.text)
 
     if 'edit_field' in user_data[user_id]:
-        # === Режим редактирования ===
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
     else:
-        # === Первичное заполнение по шагам ===
+        # Первичный ввод
         if 'price' not in user_data[user_id]:
             user_data[user_id]['price'] = value
             await msg.answer("Обери локацію:", reply_markup=create_location_buttons())
@@ -529,9 +528,12 @@ async def handle_numeric_input(msg: types.Message):
         elif 'power_kw' not in user_data[user_id] and user_data[user_id].get('fuel') == 'electric':
             user_data[user_id]['power_kw'] = value
 
-    # === Общая проверка — можно ли уже считать? ===
+    # Проверка необходимых полей
     required = ['price', 'location', 'fuel', 'year']
-    required.append('power_kw' if user_data[user_id].get('fuel') == 'electric' else 'engine_volume')
+    if user_data[user_id].get('fuel') == 'electric':
+        required.append('power_kw')
+    else:
+        required.append('engine_volume')
 
     if all(k in user_data[user_id] for k in required):
         result, breakdown = calculate_import(user_data[user_id])
@@ -562,6 +564,7 @@ async def handle_numeric_input(msg: types.Message):
             InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
+
         await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
         await msg.answer("Значення збережено.")
