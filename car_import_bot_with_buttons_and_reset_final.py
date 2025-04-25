@@ -542,7 +542,7 @@ async def forward_to_expert(message: types.Message):
         )
         await message.answer("✅ Ваше питання надіслано. Очікуйте на відповідь.")
         user_data[user_id]["expecting_question"] = False
-        @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
+@dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
