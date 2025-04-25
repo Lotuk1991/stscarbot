@@ -288,7 +288,7 @@ async def choose_volume(call: types.CallbackQuery):
 async def choose_power_kw(call: types.CallbackQuery):
     user_id = call.from_user.id
     power_kw = int(call.data[3:])
-    user_data[user_id]['engine_volume'] = power_kw  # сохраняем как объем двигателя
+    user_data[user_id]['power_kw'] = power_kw  # сохраняем как объем двигателя
 
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
