@@ -248,19 +248,41 @@ async def choose_volume(call: types.CallbackQuery):
         # Формируем текст результата
                 # Формируем текст результата
         try:
-            text_lines = []
-            for k, v in breakdown.items():
-                if "Год выпуска" in k or "Рік випуску" in k:
-                    text_lines.append(f"{k}: {v}")
-                elif isinstance(v, (int, float)):
-                    text_lines.append(f"{k}: ${v:,.0f}")
-                else:
-                    text_lines.append(f"{k}: {v}")
-            text = "\n".join(text_lines)
-            text += f"\n\n*Підсумкова сума:* ${result:,.0f}"
-        except Exception as e:
-            await call.message.answer(f"Сталася помилка під час розрахунку:\n{e}")
-            return
+            text = f"""
+**🚗 Ціна авто:** {safe_get('Ціна авто')}  
+**🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}  
+**📍 Локація:** {safe_get('Локація')}  
+**🚢 Доставка до Клайпеди:** {safe_get('Доставка до Клайпеди')}  
+**💳 Комісія за інвойс (5%):** {safe_get('Комісія за оплату інвойсу (5%)')}  
+
+**⚡ Тип пального:** {safe_get('Тип пального')}  
+**🔋 Потужність / Обʼєм:** {safe_get('Обʼєм двигуна')}  
+**📅 Рік випуску:** {safe_get('Рік випуску')}  
+
+---
+
+**🛃 Митні платежі:**  
+**🔒 Ввізне мито (10%):** {safe_get('Ввізне мито (10%)')}  
+**💥 Акциз:** {safe_get('Акциз (EUR, перерахований в USD)')}  
+**🧾 ПДВ (20%)**: {safe_get('ПДВ (20%)')}  
+**📦 Всього:** {safe_get('Митні платежі (всього)')}  
+
+---
+
+**💼 Додаткові витрати:**  
+**🚛 Експедитор (Литва):** {safe_get('Експедитор (Литва)')}  
+**🤝 Брокер:** {safe_get('Брокерські послуги')}  
+**🚚 Доставка в Україну:** {safe_get('Доставка в Україну')}  
+**🛠 Сертифікація:** {safe_get('Сертифікація')}  
+**🏛 Пенсійний фонд:** {safe_get(next((k for k in breakdown if 'Пенсійний фонд' in k), 'Пенсійний фонд'))}  
+**📄 МРЕВ:** $100  
+**🏢 Послуги компанії:** {safe_get('Послуги компанії')}  
+
+---
+
+**✅ *Підсумкова сума:*** ${result:,.0f}
+"""
+
         # Кнопки редактирования
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
@@ -505,60 +527,33 @@ async def enter_price(msg: types.Message):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-
-        def safe_get(key):
-            return f"{breakdown.get(key, 0):,.0f}"
-
-        text = f"""
-<b>🚗 Ціна авто:</b> ${safe_get('Ціна авто')}
-<b>🧾 Аукціонний збір:</b> ${safe_get('Аукціонний збір')}
-<b>📍 Локація:</b> {safe_get('Локація')}
-<b>🚢 Доставка до Клайпеди:</b> ${safe_get('Доставка до Клайпеди')}
-<b>💳 Комісія за інвойс (5%):</b> ${safe_get('Комісія за оплату інвойсу (5%)')}
-
-<b>⚡ Тип пального:</b> {safe_get('Тип пального')}
-<b>📗 Потужність / Обʼєм:</b> {safe_get('Обʼєм двигуна')}
-<b>📅 Рік випуску:</b> {safe_get('Рік випуску')}
-
-—
-<b>🧾 Митні платежі:</b>
-🔒 <b>Ввізне мито (10%):</b> ${safe_get('Ввізне мито (10%)')}
-💥 <b>Акциз:</b> ${safe_get('Акциз (EUR, перерахований в USD)')}
-📊 <b>ПДВ (20%):</b> ${safe_get('ПДВ (20%)')}
-🧾 <b>Всього:</b> ${safe_get('Митні платежі (всього)')}
-
-—
-<b>📦 Додаткові витрати:</b>
-🧭 <b>Експедитор (Литва):</b> ${safe_get('Експедитор (Литва)')}
-🤝 <b>Брокер:</b> ${safe_get('Брокерські послуги')}
-🚚 <b>Доставка в Україну:</b> ${safe_get('Доставка в Україну')}
-🛠 <b>Сертифікація:</b> ${safe_get('Сертифікація')}
-🏛 <b>Пенсійний фонд:</b> ${safe_get('Пенсійний фонд')}
-🗂 <b>МРЕВ:</b> $100
-🏢 <b>Послуги компанії:</b> ${safe_get('Послуги компанії')}
-
-—
-<b>✅ Підсумкова сума:</b> <b>${result:,.0f}</b>
-"""
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.2f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
-            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
-            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Скинути", callback_data="reset"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
+            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
+            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars")
+            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
         )
 
-        await msg.answer(text, reply_markup=markup, parse_mode="HTML")
+        await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await msg.answer("Оберіть локацію:", reply_markup=create_location_buttons())
+        await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
     user_id = call.from_user.id
