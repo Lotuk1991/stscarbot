@@ -1,4 +1,4 @@
-# Импорт необходимых библиотек
+can# Импорт необходимых библиотек
 import os
 import json
 import logging
@@ -244,7 +244,9 @@ async def choose_volume(call: types.CallbackQuery):
 
         # Расчёт
         result, breakdown = calculate_import(user_data[user_id])
-
+        def safe_get(key):
+            value = breakdown.get(key, 0)
+            return f"${value:,.0f}" if isinstance(value, (int, float)) else value
         # Формируем текст результата
                 # Формируем текст результата
         text = f"""
