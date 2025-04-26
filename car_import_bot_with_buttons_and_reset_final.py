@@ -1,4 +1,4 @@
-can# Импорт необходимых библиотек
+# Импорт необходимых библиотек
 import os
 import json
 import logging
