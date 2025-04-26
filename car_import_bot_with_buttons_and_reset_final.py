@@ -531,37 +531,67 @@ async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
 
-    # Проверяем, редактируется ли поле
-    field = user_data[user_id].get('edit_field')
-
-    if field:
+    if 'edit_field' in user_data[user_id]:
+        field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
-        user_data[user_id].pop('edit_field', None)
-    else:
-        user_data[user_id]['price'] = value
 
-    # Далее идёт обычная проверка, считать ли результат
-    required = ['price', 'location', 'fuel', 'year']
-    fuel_type = user_data[user_id].get('fuel')
-    required.append('power_kw' if fuel_type == 'electric' else 'engine_volume')
-
-    if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text = format_result_text(result, breakdown)  # если ты используешь отдельную функцию для текста
-        markup = get_edit_buttons(fuel_type)  # если у тебя есть такая
+
+        def safe_get(key):
+            return f"${breakdown.get(key, 0):,.0f}"
+
+        text = f"""
+**🚗 Ціна авто:** {safe_get('Ціна авто')}
+**🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}
+**📍 Локація:** {safe_get('Локація')}
+**🚢 Доставка до Клайпеди:** {safe_get('Доставка до Клайпеди')}
+**💳 Комісія за інвойс (5%):** {safe_get('Комісія за оплату інвойсу (5%)')}
+
+**⚡ Тип пального:** {safe_get('Тип пального')}
+**📗 Потужність / Обʼєм:** {safe_get('Обʼєм двигуна')}
+**📅 Рік випуску:** {safe_get('Рік випуску')}
+
+___
+**🧾 Митні платежі:**
+**🔒 Ввізне мито (10%):** {safe_get('Ввізне мито (10%)')}
+**💥 Акциз:** {safe_get('Акциз (EUR, перерахований в USD)')}
+**📊 ПДВ (20%):** {safe_get('ПДВ (20%)')}
+**🧾 Всього:** {safe_get('Митні платежі (всього)')}
+
+___
+**📦 Додаткові витрати:**
+**🧭 Експедитор (Литва):** {safe_get('Експедитор (Литва)')}
+**🤝 Брокер:** {safe_get('Брокерські послуги')}
+**🚚 Доставка в Україну:** {safe_get('Доставка в Україну')}
+**🛠 Сертифікація:** {safe_get('Сертифікація')}
+**🏛 Пенсійний фонд:** {safe_get('Пенсійний фонд (3%)')}
+**🗂 МРЕВ:** $100
+**🏢 Послуги компанії:** {safe_get('Послуги компанії')}
+
+___
+**✅ *Підсумкова сума:* ${result:,.0f}**
+"""
+
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
+        )
+
         await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        # Идём пошагово
-        if not user_data[user_id].get('location'):
-            await msg.answer("Оберіть локацію:", reply_markup=create_location_buttons())
-        elif not user_data[user_id].get('fuel'):
-            await msg.answer("Оберіть тип пального:", reply_markup=get_fuel_keyboard())
-        elif not user_data[user_id].get('year'):
-            await msg.answer("Оберіть рік випуску:", reply_markup=get_year_keyboard())
-        elif fuel_type != 'electric' and not user_data[user_id].get('engine_volume'):
-            await msg.answer("Оберіть обʼєм двигуна:", reply_markup=get_volume_keyboard())
-        elif fuel_type == 'electric' and not user_data[user_id].get('power_kw'):
-            await msg.answer("Оберіть потужність авто:", reply_markup=get_power_keyboard())
+        user_data[user_id]['price'] = value
+        await msg.answer("Оберіть локацію:", reply_markup=create_location_buttons())
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
     user_id = call.from_user.id
