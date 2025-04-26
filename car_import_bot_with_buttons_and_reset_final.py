@@ -505,12 +505,6 @@ async def enter_price(msg: types.Message):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text_lines = []
-        for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.2f}")
-            else:
-                text_lines.append(f"{k}: {v}")
         text = f"""
 **🚗 Ціна авто:** {safe_get('Ціна авто')}
 **🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}
