@@ -531,65 +531,49 @@ async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
 
+    # Проверяем — редактирование или первичный ввод
     if 'edit_field' in user_data[user_id]:
+        # Редактирование
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
 
-        result, breakdown = calculate_import(user_data[user_id])
+        # Пересчёт результата
+        fuel = user_data[user_id].get('fuel')
+        required = ['price', 'location', 'fuel', 'year']
+        required.append('power_kw' if fuel == 'electric' else 'engine_volume')
 
-        def safe_get(key):
-            return f"${breakdown.get(key, 0):,.0f}"
+        if all(key in user_data[user_id] for key in required):
+            result, breakdown = calculate_import(user_data[user_id])
+            text_lines = []
+            for k, v in breakdown.items():
+                if isinstance(v, (int, float)):
+                    text_lines.append(f"{k}: ${v:,.0f}")
+                else:
+                    text_lines.append(f"{k}: {v}")
+            text = "\n".join(text_lines)
+            text += f"\n\n*✅ Підсумкова сума:* ${result:,.0f}"
 
-        text = f"""
-**🚗 Ціна авто:** {safe_get('Ціна авто')}
-**🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}
-**📍 Локація:** {safe_get('Локація')}
-**🚢 Доставка до Клайпеди:** {safe_get('Доставка до Клайпеди')}
-**💳 Комісія за інвойс (5%):** {safe_get('Комісія за оплату інвойсу (5%)')}
+            markup = InlineKeyboardMarkup(row_width=2)
+            markup.add(
+                InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+                InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
+                InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
+                InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
+                InlineKeyboardButton("🛠 Обʼєм" if fuel != 'electric' else "⚡ Потужність", callback_data="edit_volume"),
+                InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
+                InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
+                InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
+                InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
+                InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+                InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+                InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
+            )
 
-**⚡ Тип пального:** {safe_get('Тип пального')}
-**📗 Потужність / Обʼєм:** {safe_get('Обʼєм двигуна')}
-**📅 Рік випуску:** {safe_get('Рік випуску')}
-
-___
-**🧾 Митні платежі:**
-**🔒 Ввізне мито (10%):** {safe_get('Ввізне мито (10%)')}
-**💥 Акциз:** {safe_get('Акциз (EUR, перерахований в USD)')}
-**📊 ПДВ (20%):** {safe_get('ПДВ (20%)')}
-**🧾 Всього:** {safe_get('Митні платежі (всього)')}
-
-___
-**📦 Додаткові витрати:**
-**🧭 Експедитор (Литва):** {safe_get('Експедитор (Литва)')}
-**🤝 Брокер:** {safe_get('Брокерські послуги')}
-**🚚 Доставка в Україну:** {safe_get('Доставка в Україну')}
-**🛠 Сертифікація:** {safe_get('Сертифікація')}
-**🏛 Пенсійний фонд:** {safe_get('Пенсійний фонд (3%)')}
-**🗂 МРЕВ:** $100
-**🏢 Послуги компанії:** {safe_get('Послуги компанії')}
-
-___
-**✅ *Підсумкова сума:* ${result:,.0f}**
-"""
-
-        markup = InlineKeyboardMarkup(row_width=2)
-        markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
-            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
-            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
-            InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
-            InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
-        )
-
-        await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
+            await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
+        else:
+            await msg.answer("Поле оновлено.")
     else:
+        # Первый раз пользователь вводит цену после старта
         user_data[user_id]['price'] = value
         await msg.answer("Оберіть локацію:", reply_markup=create_location_buttons())
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
