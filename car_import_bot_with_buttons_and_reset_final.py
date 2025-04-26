@@ -502,12 +502,8 @@ async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
 
-    if 'edit_field' in user_data[user_id]:
-        field = user_data[user_id].pop('edit_field')
-        user_data[user_id][field] = value
-
         # Переход к следующему этапу по порядку
-        if 'edit_field' in user_data[user_id]:
+    if 'edit_field' in user_data[user_id]:
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
 
