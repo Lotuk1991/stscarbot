@@ -505,6 +505,10 @@ async def enter_price(msg: types.Message):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
+
+        def safe_get(key):
+            return f"{breakdown.get(key, 0):,.0f}"
+
         text = f"""
 **🚗 Ціна авто:** {safe_get('Ціна авто')}
 **🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}
@@ -529,7 +533,7 @@ ___
 **🤝 Брокер:** {safe_get('Брокерські послуги')}
 **🚚 Доставка в Україну:** {safe_get('Доставка в Україну')}
 **🛠 Сертифікація:** {safe_get('Сертифікація')}
-**🏛 Пенсійний фонд:** {safe_get('Пенсійний фонд (3%)')}
+**🏛 Пенсійний фонд:** {safe_get('Пенсійний фонд')}
 **🗂 МРЕВ:** $100
 **🏢 Послуги компанії:** {safe_get('Послуги компанії')}
 
@@ -539,22 +543,22 @@ ___
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
-            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
-            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
-            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
-            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
-            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
+            InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
+            InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("📦 Скинути", callback_data="reset"),
+            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
+            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
         )
 
         await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
+        await msg.answer("Оберіть локацію:", reply_markup=create_location_buttons())
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
     user_id = call.from_user.id
