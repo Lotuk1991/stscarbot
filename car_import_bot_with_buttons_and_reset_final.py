@@ -527,21 +527,39 @@ async def reset_data(call: types.CallbackQuery):
     await call.message.answer("Почнемо спочатку. Обери аукціон:", reply_markup=get_auction_keyboard())
 
 @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
-async def enter_price(msg: types.Message):
+async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
 
-    if 'edit_field' in user_data[user_id]:
+    if 'edit_field' in user_data.get(user_id, {}):
+        # Если идет редактирование поля
         field = user_data[user_id].pop('edit_field')
         user_data[user_id][field] = value
-        # Пересчёт и отображение результата
+
+        # После редактирования пересчёт
         result, breakdown = calculate_import(user_data[user_id])
-        # Отправка обновлённого сообщения с результатами
-        await msg.answer(f"Обновлено поле {field}. Новый результат: {result}")
+        text = format_breakdown_text(breakdown, result)
+        await msg.answer(text, reply_markup=create_edit_buttons(), parse_mode="Markdown")
+
     else:
-        user_data[user_id]['price'] = value
-        # Продолжение пошагового ввода
-        await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
+        # Если идет пошаговое заполнение
+        if 'price' not in user_data[user_id]:
+            user_data[user_id]['price'] = value
+            await msg.answer("📍 Обери локацію:", reply_markup=create_location_buttons())
+        elif 'delivery_price' not in user_data[user_id]:
+            user_data[user_id]['delivery_price'] = value
+            await msg.answer("⚡ Обери тип пального:", reply_markup=create_fuel_buttons())
+        elif 'year' not in user_data[user_id]:
+            user_data[user_id]['year'] = int(value)
+            await msg.answer("🛠 Введіть об'єм двигуна (л):")
+        elif 'engine_volume' not in user_data[user_id]:
+            user_data[user_id]['engine_volume'] = float(value)
+
+            # Если всё заполнено
+            if all(k in user_data[user_id] for k in ['price', 'location', 'fuel', 'year', 'engine_volume']):
+                result, breakdown = calculate_import(user_data[user_id])
+                text = format_breakdown_text(breakdown, result)
+                await msg.answer(text, reply_markup=create_edit_buttons(), parse_mode="Markdown")
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
     user_id = call.from_user.id
