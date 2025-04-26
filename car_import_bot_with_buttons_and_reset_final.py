@@ -531,35 +531,37 @@ async def handle_numeric_input(msg: types.Message):
     user_id = msg.from_user.id
     value = float(msg.text)
 
-    if 'edit_field' in user_data.get(user_id, {}):
-        # Если идет редактирование поля
-        field = user_data[user_id].pop('edit_field')
+    # Проверяем, редактируется ли поле
+    field = user_data[user_id].get('edit_field')
+
+    if field:
         user_data[user_id][field] = value
-
-        # После редактирования пересчёт
-        result, breakdown = calculate_import(user_data[user_id])
-        text = format_breakdown_text(breakdown, result)
-        await msg.answer(text, reply_markup=create_edit_buttons(), parse_mode="Markdown")
-
+        user_data[user_id].pop('edit_field', None)
     else:
-        # Если идет пошаговое заполнение
-        if 'price' not in user_data[user_id]:
-            user_data[user_id]['price'] = value
-            await msg.answer("📍 Обери локацію:", reply_markup=create_location_buttons())
-        elif 'delivery_price' not in user_data[user_id]:
-            user_data[user_id]['delivery_price'] = value
-            await msg.answer("⚡ Обери тип пального:", reply_markup=create_fuel_buttons())
-        elif 'year' not in user_data[user_id]:
-            user_data[user_id]['year'] = int(value)
-            await msg.answer("🛠 Введіть об'єм двигуна (л):")
-        elif 'engine_volume' not in user_data[user_id]:
-            user_data[user_id]['engine_volume'] = float(value)
+        user_data[user_id]['price'] = value
 
-            # Если всё заполнено
-            if all(k in user_data[user_id] for k in ['price', 'location', 'fuel', 'year', 'engine_volume']):
-                result, breakdown = calculate_import(user_data[user_id])
-                text = format_breakdown_text(breakdown, result)
-                await msg.answer(text, reply_markup=create_edit_buttons(), parse_mode="Markdown")
+    # Далее идёт обычная проверка, считать ли результат
+    required = ['price', 'location', 'fuel', 'year']
+    fuel_type = user_data[user_id].get('fuel')
+    required.append('power_kw' if fuel_type == 'electric' else 'engine_volume')
+
+    if all(key in user_data[user_id] for key in required):
+        result, breakdown = calculate_import(user_data[user_id])
+        text = format_result_text(result, breakdown)  # если ты используешь отдельную функцию для текста
+        markup = get_edit_buttons(fuel_type)  # если у тебя есть такая
+        await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
+    else:
+        # Идём пошагово
+        if not user_data[user_id].get('location'):
+            await msg.answer("Оберіть локацію:", reply_markup=create_location_buttons())
+        elif not user_data[user_id].get('fuel'):
+            await msg.answer("Оберіть тип пального:", reply_markup=get_fuel_keyboard())
+        elif not user_data[user_id].get('year'):
+            await msg.answer("Оберіть рік випуску:", reply_markup=get_year_keyboard())
+        elif fuel_type != 'electric' and not user_data[user_id].get('engine_volume'):
+            await msg.answer("Оберіть обʼєм двигуна:", reply_markup=get_volume_keyboard())
+        elif fuel_type == 'electric' and not user_data[user_id].get('power_kw'):
+            await msg.answer("Оберіть потужність авто:", reply_markup=get_power_keyboard())
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
     user_id = call.from_user.id
