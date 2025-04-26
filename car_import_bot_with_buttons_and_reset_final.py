@@ -92,6 +92,12 @@ def get_power_kw_keyboard():
     return markup
     
 # Обработчики
+@dp.callback_query_handler(lambda c: c.data.startswith('edit_'))
+async def process_edit_callback(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    field = callback_query.data.replace('edit_', '')
+    user_data[user_id]['edit_field'] = field
+    await bot.send_message(user_id, f"Введите новое значение для {field}:")
 @dp.callback_query_handler(lambda c: c.data == "ask_expert")
 async def handle_expert_request(call: types.CallbackQuery):
     user_data[call.from_user.id]["expecting_question"] = True
@@ -523,37 +529,18 @@ async def reset_data(call: types.CallbackQuery):
 @dp.message_handler(lambda msg: msg.text.replace('.', '', 1).isdigit())
 async def enter_price(msg: types.Message):
     user_id = msg.from_user.id
-    user_data[user_id]['price'] = float(msg.text)
+    value = float(msg.text)
 
-    required = ['price', 'location', 'fuel', 'year', 'engine_volume']
-    if all(key in user_data[user_id] for key in required):
+    if 'edit_field' in user_data[user_id]:
+        field = user_data[user_id].pop('edit_field')
+        user_data[user_id][field] = value
+        # Пересчёт и отображение результата
         result, breakdown = calculate_import(user_data[user_id])
-        text_lines = []
-        for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.2f}")
-            else:
-                text_lines.append(f"{k}: {v}")
-        text = "\n".join(text_lines)
-        text += f"\n\n*Итоговая сумма:* ${result:.2f}"
-
-        markup = InlineKeyboardMarkup(row_width=2)
-        markup.add(
-            InlineKeyboardButton("✏️ Цена", callback_data="edit_price"),
-            InlineKeyboardButton("📍 Локация", callback_data="edit_location"),
-            InlineKeyboardButton("⚡ Топливо", callback_data="edit_fuel"),
-            InlineKeyboardButton("📅 Год", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Объём", callback_data="edit_volume"),
-            InlineKeyboardButton("📦 Сбросить", callback_data="reset"),
-            InlineKeyboardButton("✏️ Экспедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Украину", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертификация", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Услуги компании", callback_data="edit_stscars")
-        )
-
-        await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
+        # Отправка обновлённого сообщения с результатами
+        await msg.answer(f"Обновлено поле {field}. Новый результат: {result}")
     else:
+        user_data[user_id]['price'] = value
+        # Продолжение пошагового ввода
         await msg.answer("Выбери локацию:", reply_markup=create_location_buttons())
 @dp.callback_query_handler(lambda c: c.data == "generate_pdf")
 async def send_pdf(call: types.CallbackQuery):
