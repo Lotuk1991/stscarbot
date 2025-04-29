@@ -329,9 +329,6 @@ async def choose_power_kw(call: types.CallbackQuery):
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
 
-        def safe_get(key):
-            return f"${breakdown.get(key, 0):,.0f}" if isinstance(breakdown.get(key), (int, float)) else breakdown.get(key, '-')
-
         text = generate_result_text(breakdown, result)
 
         markup = InlineKeyboardMarkup(row_width=2)
