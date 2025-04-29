@@ -33,10 +33,11 @@ with open('iaai_fee_data.json', 'r') as f:
     iaai_fee_data = json.load(f)
 
 # Клавиатуры
-def generate_result_text(breakdown, result):
-    def safe_get(key):
-        return f"${breakdown.get(key, 0):,.0f}"
-
+def safe_get(key):
+    val = breakdown.get(key, 0)
+    if isinstance(val, (int, float)):
+        return f"${val:,.0f}"
+    return str(val)
     return f"""
 **🚗 Ціна авто:** {safe_get('Ціна авто')}
 **🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}
