@@ -124,48 +124,22 @@ async def choose_location(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-    text = f"""
-**🚗 Ціна авто:** {safe_get('Ціна авто')}  
-**🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}  
-**📍 Локація:** {safe_get('Локація')}  
-**🚢 Доставка до Клайпеди:** {safe_get('Доставка до Клайпеди')}  
-**💳 Комісія за інвойс (5%):** {safe_get('Комісія за оплату інвойсу (5%)')}  
-
-**⚡ Тип пального:** {safe_get('Тип пального')}  
-**🔋 Потужність / Обʼєм:** {safe_get('Обʼєм двигуна')}  
-**📅 Рік випуску:** {safe_get('Рік випуску')}  
-
----
-
-**🛃 Митні платежі:**  
-**🔒 Ввізне мито (10%):** {safe_get('Ввізне мито (10%)')}  
-**💥 Акциз:** {safe_get('Акциз (EUR, перерахований в USD)')}  
-**🧾 ПДВ (20%)**: {safe_get('ПДВ (20%)')}  
-**📦 Всього:** {safe_get('Митні платежі (всього)')}  
-
----
-
-**💼 Додаткові витрати:**  
-**🚛 Експедитор (Литва):** {safe_get('Експедитор (Литва)')}  
-**🤝 Брокер:** {safe_get('Брокерські послуги')}  
-**🚚 Доставка в Україну:** {safe_get('Доставка в Україну')}  
-**🛠 Сертифікація:** {safe_get('Сертифікація')}  
-**🏛 Пенсійний фонд:** {safe_get(next((k for k in breakdown if 'Пенсійний фонд' in k), 'Пенсійний фонд'))}  
-**📄 МРЕВ:** $100  
-**🏢 Послуги компанії:** {safe_get('Послуги компанії')}  
-
----
-
-**✅ *Підсумкова сума:*** ${result:,.0f}
-"""
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.0f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-            InlineKeyboardButton("⚡ Потужність (кВт)", callback_data="edit_volume"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
             InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
@@ -178,7 +152,8 @@ async def choose_location(call: types.CallbackQuery):
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await call.message.answer("Недостатньо даних для розрахунку.")
+        await call.message.answer("Обери тип пального:", reply_markup=get_fuel_keyboard())
+
 @dp.callback_query_handler(lambda c: c.data in ['gasoline', 'diesel', 'hybrid', 'electric'])
 async def choose_fuel(call: types.CallbackQuery):
     user_id = call.from_user.id
@@ -187,48 +162,22 @@ async def choose_fuel(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-    text = f"""
-**🚗 Ціна авто:** {safe_get('Ціна авто')}  
-**🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}  
-**📍 Локація:** {safe_get('Локація')}  
-**🚢 Доставка до Клайпеди:** {safe_get('Доставка до Клайпеди')}  
-**💳 Комісія за інвойс (5%):** {safe_get('Комісія за оплату інвойсу (5%)')}  
-
-**⚡ Тип пального:** {safe_get('Тип пального')}  
-**🔋 Потужність / Обʼєм:** {safe_get('Обʼєм двигуна')}  
-**📅 Рік випуску:** {safe_get('Рік випуску')}  
-
----
-
-**🛃 Митні платежі:**  
-**🔒 Ввізне мито (10%):** {safe_get('Ввізне мито (10%)')}  
-**💥 Акциз:** {safe_get('Акциз (EUR, перерахований в USD)')}  
-**🧾 ПДВ (20%)**: {safe_get('ПДВ (20%)')}  
-**📦 Всього:** {safe_get('Митні платежі (всього)')}  
-
----
-
-**💼 Додаткові витрати:**  
-**🚛 Експедитор (Литва):** {safe_get('Експедитор (Литва)')}  
-**🤝 Брокер:** {safe_get('Брокерські послуги')}  
-**🚚 Доставка в Україну:** {safe_get('Доставка в Україну')}  
-**🛠 Сертифікація:** {safe_get('Сертифікація')}  
-**🏛 Пенсійний фонд:** {safe_get(next((k for k in breakdown if 'Пенсійний фонд' in k), 'Пенсійний фонд'))}  
-**📄 МРЕВ:** $100  
-**🏢 Послуги компанії:** {safe_get('Послуги компанії')}  
-
----
-
-**✅ *Підсумкова сума:*** ${result:,.0f}
-"""
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.0f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-            InlineKeyboardButton("⚡ Потужність (кВт)", callback_data="edit_volume"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
+            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
             InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
@@ -241,7 +190,8 @@ async def choose_fuel(call: types.CallbackQuery):
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await call.message.answer("Недостатньо даних для розрахунку.")
+        await call.message.answer("Вибери рік випуску:", reply_markup=get_year_keyboard())
+            
 @dp.callback_query_handler(lambda c: c.data.startswith('year_'))
 async def choose_year(call: types.CallbackQuery):
     user_id = call.from_user.id
@@ -253,40 +203,15 @@ async def choose_year(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-    text = f"""
-**🚗 Ціна авто:** {safe_get('Ціна авто')}  
-**🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}  
-**📍 Локація:** {safe_get('Локація')}  
-**🚢 Доставка до Клайпеди:** {safe_get('Доставка до Клайпеди')}  
-**💳 Комісія за інвойс (5%):** {safe_get('Комісія за оплату інвойсу (5%)')}  
+        text_lines = []
+        for k, v in breakdown.items():
+            if isinstance(v, (int, float)):
+                text_lines.append(f"{k}: ${v:.0f}")
+            else:
+                text_lines.append(f"{k}: {v}")
+        text = "\n".join(text_lines)
+        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
 
-**⚡ Тип пального:** {safe_get('Тип пального')}  
-**🔋 Потужність / Обʼєм:** {safe_get('Обʼєм двигуна')}  
-**📅 Рік випуску:** {safe_get('Рік випуску')}  
-
----
-
-**🛃 Митні платежі:**  
-**🔒 Ввізне мито (10%):** {safe_get('Ввізне мито (10%)')}  
-**💥 Акциз:** {safe_get('Акциз (EUR, перерахований в USD)')}  
-**🧾 ПДВ (20%)**: {safe_get('ПДВ (20%)')}  
-**📦 Всього:** {safe_get('Митні платежі (всього)')}  
-
----
-
-**💼 Додаткові витрати:**  
-**🚛 Експедитор (Литва):** {safe_get('Експедитор (Литва)')}  
-**🤝 Брокер:** {safe_get('Брокерські послуги')}  
-**🚚 Доставка в Україну:** {safe_get('Доставка в Україну')}  
-**🛠 Сертифікація:** {safe_get('Сертифікація')}  
-**🏛 Пенсійний фонд:** {safe_get(next((k for k in breakdown if 'Пенсійний фонд' in k), 'Пенсійний фонд'))}  
-**📄 МРЕВ:** $100  
-**🏢 Послуги компанії:** {safe_get('Послуги компанії')}  
-
----
-
-**✅ *Підсумкова сума:*** ${result:,.0f}
-"""
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
@@ -322,41 +247,18 @@ async def choose_volume(call: types.CallbackQuery):
 
         # Формируем текст результата
                 # Формируем текст результата
-    text = f"""
-**🚗 Ціна авто:** {safe_get('Ціна авто')}  
-**🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}  
-**📍 Локація:** {safe_get('Локація')}  
-**🚢 Доставка до Клайпеди:** {safe_get('Доставка до Клайпеди')}  
-**💳 Комісія за інвойс (5%):** {safe_get('Комісія за оплату інвойсу (5%)')}  
-
-**⚡ Тип пального:** {safe_get('Тип пального')}  
-**🔋 Потужність / Обʼєм:** {safe_get('Обʼєм двигуна')}  
-**📅 Рік випуску:** {safe_get('Рік випуску')}  
-
----
-
-**🛃 Митні платежі:**  
-**🔒 Ввізне мито (10%):** {safe_get('Ввізне мито (10%)')}  
-**💥 Акциз:** {safe_get('Акциз (EUR, перерахований в USD)')}  
-**🧾 ПДВ (20%)**: {safe_get('ПДВ (20%)')}  
-**📦 Всього:** {safe_get('Митні платежі (всього)')}  
-
----
-
-**💼 Додаткові витрати:**  
-**🚛 Експедитор (Литва):** {safe_get('Експедитор (Литва)')}  
-**🤝 Брокер:** {safe_get('Брокерські послуги')}  
-**🚚 Доставка в Україну:** {safe_get('Доставка в Україну')}  
-**🛠 Сертифікація:** {safe_get('Сертифікація')}  
-**🏛 Пенсійний фонд:** {safe_get(next((k for k in breakdown if 'Пенсійний фонд' in k), 'Пенсійний фонд'))}  
-**📄 МРЕВ:** $100  
-**🏢 Послуги компанії:** {safe_get('Послуги компанії')}  
-
----
-
-**✅ *Підсумкова сума:*** ${result:,.0f}
-"""
-       except Exception as e:
+        try:
+            text_lines = []
+            for k, v in breakdown.items():
+                if "Год выпуска" in k or "Рік випуску" in k:
+                    text_lines.append(f"{k}: {v}")
+                elif isinstance(v, (int, float)):
+                    text_lines.append(f"{k}: ${v:,.0f}")
+                else:
+                    text_lines.append(f"{k}: {v}")
+            text = "\n".join(text_lines)
+            text += f"\n\n*Підсумкова сума:* ${result:,.0f}"
+        except Exception as e:
             await call.message.answer(f"Сталася помилка під час розрахунку:\n{e}")
             return
         # Кнопки редактирования
