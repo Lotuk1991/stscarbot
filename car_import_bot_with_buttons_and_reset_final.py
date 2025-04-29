@@ -175,7 +175,7 @@ async def choose_location(call: types.CallbackQuery):
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
 
-        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+        await call.message.answer(text, reply_markup=markup, parse_mode="HTML")
     else:
         await call.message.answer("Обери тип пального:", reply_markup=get_fuel_keyboard())
 
@@ -206,7 +206,7 @@ async def choose_fuel(call: types.CallbackQuery):
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
 
-        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+        await call.message.answer(text, reply_markup=markup, parse_mode="HTML")
     else:
         await call.message.answer("Вибери рік випуску:", reply_markup=get_year_keyboard())
             
@@ -239,7 +239,7 @@ async def choose_year(call: types.CallbackQuery):
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
 
-        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+        await call.message.answer(text, reply_markup=markup, parse_mode="HTML")
     else:
         if fuel == 'electric':
             await call.message.answer("Обери потужність авто (кВт):", reply_markup=get_power_kw_keyboard())
