@@ -33,12 +33,14 @@ with open('iaai_fee_data.json', 'r') as f:
     iaai_fee_data = json.load(f)
 
 # Клавиатуры
-def safe_get(key):
-    val = breakdown.get(key, 0)
-    if isinstance(val, (int, float)):
-        return f"${val:,.0f}"
-    return str(val)
-    return f"""
+def generate_result_text(breakdown, result):
+    def safe_get(key):
+        val = breakdown.get(key, 0)
+        if isinstance(val, (int, float)):
+            return f"${val:,.0f}"
+        return str(val)
+
+    text = f"""
 **🚗 Ціна авто:** {safe_get('Ціна авто')}
 **🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}
 **📍 Локація:** {safe_get('Локація')}
@@ -50,11 +52,11 @@ def safe_get(key):
 **📅 Рік випуску:** {safe_get('Рік випуску')}
 
 ___
-**📄 Митні платежі:**
+**🧾 Митні платежі:**
 **🔒 Ввізне мито (10%):** {safe_get('Ввізне мито (10%)')}
 **💥 Акциз:** {safe_get('Акциз (EUR, перерахований в USD)')}
-**🧾 ПДВ (20%)**: {safe_get('ПДВ (20%)')}
-**📦 Всього:** {safe_get('Митні платежі (всього)')}
+**📊 ПДВ (20%):** {safe_get('ПДВ (20%)')}
+**🧾 Всього:** {safe_get('Митні платежі (всього)')}
 
 ___
 **📦 Додаткові витрати:**
@@ -69,6 +71,7 @@ ___
 ___
 **✅ *Підсумкова сума:* ${result:,.0f}**
 """
+    return text
 
 def get_auction_keyboard():
     markup = InlineKeyboardMarkup(row_width=2)
