@@ -328,7 +328,6 @@ async def choose_power_kw(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'power_kw']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-
         text = generate_result_text(breakdown, result)
 
         markup = InlineKeyboardMarkup(row_width=2)
