@@ -273,7 +273,7 @@ async def choose_volume(call: types.CallbackQuery):
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
 
-        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+        await msg.answer(text, reply_markup=markup, parse_mode="HTML")
 
     except Exception as e:
         await call.message.answer(f"Сталася помилка під час розрахунку::\n`{e}`", parse_mode="Markdown")
@@ -306,7 +306,7 @@ async def choose_power_kw(call: types.CallbackQuery):
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
 
-        await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
+        await msg.answer(text, reply_markup=markup, parse_mode="HTML")
     else:
         await call.message.answer("Недостатньо даних для розрахунку.")
 # Функция расчета импортных пошлин и стоимости
