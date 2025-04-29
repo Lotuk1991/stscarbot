@@ -33,12 +33,20 @@ with open('iaai_fee_data.json', 'r') as f:
     iaai_fee_data = json.load(f)
 
 # Клавиатуры
-def generate_result_text(breakdown, result):
+def generate_result_text(breakdown, result, user_data):
     def safe_get(key):
-        val = breakdown.get(key, 0)
-        return f"${val:,.0f}" if isinstance(val, (int, float)) else val
+        value = breakdown.get(key, 0)
+        if key in ['Рік випуску', 'Тип пального']:
+            return str(value)
+        return f"${value:,.0f}" if isinstance(value, (int, float)) else value
 
-    return f"""
+    fuel_type = user_data.get('fuel', '').lower()
+
+    pension_line = ""
+    if fuel_type in ['gasoline', 'diesel', 'hybrid']:
+        pension_line = f"<b>🏛 Пенсійний фонд:</b> {safe_get('Пенсійний фонд (3%)')}"
+
+    text = f"""
 <b>🚗 Ціна авто:</b> {safe_get('Ціна авто')}
 <b>🧾 Аукціонний збір:</b> {safe_get('Аукціонний збір')}
 <b>📍 Локація:</b> {safe_get('Локація')}
@@ -52,7 +60,7 @@ def generate_result_text(breakdown, result):
 <b>🧾 Митні платежі:</b>
 <b>🔒 Ввізне мито (10%):</b> {safe_get('Ввізне мито (10%)')}
 <b>💥 Акциз:</b> {safe_get('Акциз (EUR, перерахований в USD)')}
-<b>📊 ПДВ (20%):</b> {safe_get('ПДВ (20%)')}
+<b>🇪🇺 ПДВ (20%):</b> {safe_get('ПДВ (20%)')}
 <b>📦 Всього:</b> {safe_get('Митні платежі (всього)')}
 
 <b>📦 Додаткові витрати:</b>
@@ -60,12 +68,13 @@ def generate_result_text(breakdown, result):
 <b>🤝 Брокер:</b> {safe_get('Брокерські послуги')}
 <b>🚚 Доставка в Україну:</b> {safe_get('Доставка в Україну')}
 <b>🛠 Сертифікація:</b> {safe_get('Сертифікація')}
-<b>🏛 Пенсійний фонд:</b> {safe_get('Пенсійний фонд (3%)')}
-<b>🗂 МРЕВ:</b> $100
+{pension_line}
+<b>🧾 МРЕВ:</b> $100
 <b>🏢 Послуги компанії:</b> {safe_get('Послуги компанії')}
 
 <b>✅ Підсумкова сума:</b> ${result:,.0f}
 """
+    return text
 
 def get_auction_keyboard():
     markup = InlineKeyboardMarkup(row_width=2)
@@ -157,7 +166,7 @@ async def choose_location(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text = generate_result_text(breakdown, result)
+        text = generate_result_text(breakdown, result, user_data[user_id])
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
@@ -187,7 +196,7 @@ async def choose_fuel(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text = generate_result_text(breakdown, result)
+        text = generate_result_text(breakdown, result, user_data[user_id])
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
@@ -221,7 +230,7 @@ async def choose_year(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text = generate_result_text(breakdown, result)
+        text = generate_result_text(breakdown, result, user_data[user_id])
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
@@ -254,7 +263,7 @@ async def choose_volume(call: types.CallbackQuery):
 
         # Расчёт
         result, breakdown = calculate_import(user_data[user_id])
-        text = generate_result_text(breakdown, result)
+        text = generate_result_text(breakdown, result, user_data[user_id])
         # Кнопки редактирования
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
@@ -287,7 +296,7 @@ async def choose_power_kw(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'power_kw']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text = generate_result_text(breakdown, result)
+        text = generate_result_text(breakdown, result, user_data[user_id])
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
