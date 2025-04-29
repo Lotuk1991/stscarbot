@@ -69,7 +69,7 @@ def generate_result_text(breakdown, result, user_data):
 <b>🚚 Доставка в Україну:</b> {safe_get('Доставка в Україну')}
 <b>🛠 Сертифікація:</b> {safe_get('Сертифікація')}
 {pension_line}
-<b>🧾 МРЕВ:</b> $100
+<b>🧾 МРЕВ:</b> $50
 <b>🏢 Послуги компанії:</b> {safe_get('Послуги компанії')}
 
 <b>✅ Підсумкова сума:</b> ${result:,.0f}
@@ -329,7 +329,7 @@ def calculate_import(data):
 
     price = data['price']
     year = data['year']
-    fuel = data['fuel']
+    fuel = data['fuel'].strip().lower()  # нормализуем топливо
     is_electric = fuel == 'electric'
     location = data['location']
     auction = data['auction']
@@ -352,7 +352,7 @@ def calculate_import(data):
     customs_base = price + auction_fee + 1600
     invoice_fee = (price + auction_fee + delivery_dict[location]) * 0.05
 
-    # Электро: мощность в кВт
+    # Определение параметров для расчёта
     if is_electric:
         power_kw = data.get('power_kw', 0)
         excise_eur = power_kw * 1.1
@@ -365,19 +365,19 @@ def calculate_import(data):
         volume = data['engine_volume']
         volume_display = f"{volume} л"
 
-        if fuel in ['hybrid', 'gasoline']:
+        if fuel in ['gasoline', 'hybrid']:
             rate = 50 if volume <= 3.0 else 100
-            excise_eur = rate * volume * age
         elif fuel == 'diesel':
             rate = 75 if volume <= 3.5 else 150
-            excise_eur = rate * volume * age
         else:
-            excise_eur = 0
+            rate = 0
 
+        excise_eur = rate * volume * age
         excise = excise_eur * euro_to_usd_fixed
         import_duty = customs_base * 0.10
         vat = (customs_base + import_duty + excise) * 0.20
 
+        # Пенсионный фонд в гривне
         grn_price = customs_base * 40.5
         if grn_price < 499620:
             pension_percent = 0.03
