@@ -159,15 +159,7 @@ async def choose_location(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text_lines = []
-        for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
-        text = "\n".join(text_lines)
-        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
-
+        text = generate_result_text(breakdown, result)
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
@@ -197,14 +189,7 @@ async def choose_fuel(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text_lines = []
-        for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
-        text = "\n".join(text_lines)
-        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
+        text = generate_result_text(breakdown, result)
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
@@ -238,15 +223,7 @@ async def choose_year(call: types.CallbackQuery):
     required = ['price', 'location', 'fuel', 'year', 'engine_volume']
     if all(key in user_data[user_id] for key in required):
         result, breakdown = calculate_import(user_data[user_id])
-        text_lines = []
-        for k, v in breakdown.items():
-            if isinstance(v, (int, float)):
-                text_lines.append(f"{k}: ${v:.0f}")
-            else:
-                text_lines.append(f"{k}: {v}")
-        text = "\n".join(text_lines)
-        text += f"\n\n*Підсумкова сума:* ${result:.0f}"
-
+        text = generate_result_text(breakdown, result)
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
@@ -279,23 +256,7 @@ async def choose_volume(call: types.CallbackQuery):
 
         # Расчёт
         result, breakdown = calculate_import(user_data[user_id])
-
-        # Формируем текст результата
-                # Формируем текст результата
-        try:
-            text_lines = []
-            for k, v in breakdown.items():
-                if "Год выпуска" in k or "Рік випуску" in k:
-                    text_lines.append(f"{k}: {v}")
-                elif isinstance(v, (int, float)):
-                    text_lines.append(f"{k}: ${v:,.0f}")
-                else:
-                    text_lines.append(f"{k}: {v}")
-            text = "\n".join(text_lines)
-            text += f"\n\n*Підсумкова сума:* ${result:,.0f}"
-        except Exception as e:
-            await call.message.answer(f"Сталася помилка під час розрахунку:\n{e}")
-            return
+        text = generate_result_text(breakdown, result)
         # Кнопки редактирования
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
