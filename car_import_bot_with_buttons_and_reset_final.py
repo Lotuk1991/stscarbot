@@ -158,13 +158,14 @@ async def choose_location(call: types.CallbackQuery):
 
 **✅ *Підсумкова сума:*** ${result:,.0f}
 """
+
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
+            InlineKeyboardButton("⚡ Потужність (кВт)", callback_data="edit_volume"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
             InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
@@ -177,8 +178,7 @@ async def choose_location(call: types.CallbackQuery):
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await call.message.answer("Обери тип пального:", reply_markup=get_fuel_keyboard())
-
+        await call.message.answer("Недостатньо даних для розрахунку.")
 @dp.callback_query_handler(lambda c: c.data in ['gasoline', 'diesel', 'hybrid', 'electric'])
 async def choose_fuel(call: types.CallbackQuery):
     user_id = call.from_user.id
@@ -221,13 +221,14 @@ async def choose_fuel(call: types.CallbackQuery):
 
 **✅ *Підсумкова сума:*** ${result:,.0f}
 """
+
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
+            InlineKeyboardButton("⚡ Потужність (кВт)", callback_data="edit_volume"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
             InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
             InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
             InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
@@ -240,8 +241,7 @@ async def choose_fuel(call: types.CallbackQuery):
 
         await call.message.answer(text, reply_markup=markup, parse_mode="Markdown")
     else:
-        await call.message.answer("Вибери рік випуску:", reply_markup=get_year_keyboard())
-            
+        await call.message.answer("Недостатньо даних для розрахунку.")
 @dp.callback_query_handler(lambda c: c.data.startswith('year_'))
 async def choose_year(call: types.CallbackQuery):
     user_id = call.from_user.id
@@ -322,7 +322,7 @@ async def choose_volume(call: types.CallbackQuery):
 
         # Формируем текст результата
                 # Формируем текст результата
-                text = f"""
+    text = f"""
 **🚗 Ціна авто:** {safe_get('Ціна авто')}  
 **🧾 Аукціонний збір:** {safe_get('Аукціонний збір')}  
 **📍 Локація:** {safe_get('Локація')}  
