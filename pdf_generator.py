@@ -6,28 +6,32 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-# Регистрация шрифтов
+# Шрифты (если ещё не зарегистрированы)
 pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
 pdfmetrics.registerFont(TTFont('DejaVu-Bold', 'DejaVuSans-Bold.ttf'))
 
 def generate_import_pdf(breakdown, result, buffer, auction=None):
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     styles = getSampleStyleSheet()
+    
     normal = ParagraphStyle(name='Normal', fontName='DejaVu', fontSize=10, spaceAfter=5)
     bold = ParagraphStyle(name='Bold', fontName='DejaVu-Bold', fontSize=10, spaceAfter=5)
+    bold_big = ParagraphStyle(name='BoldBig', fontName='DejaVu-Bold', fontSize=12, spaceAfter=8)
     header = ParagraphStyle(name='Header', fontName='DejaVu-Bold', fontSize=12, textColor=colors.HexColor("#38c4ef"), spaceAfter=10)
-
+    auction_style = ParagraphStyle(name='Auction', fontName='DejaVu-Bold', fontSize=11, textColor=colors.HexColor("#0077CC"), alignment=1)
+    
     elements = []
 
-    # Логотип
+    # Логотип по центру
     logo = Image("logo.png", width=200, height=80)
+    logo.hAlign = 'CENTER'
     elements.append(logo)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 30))
 
     # Название аукциона
     if auction:
-        elements.append(Paragraph(f"Аукціон: <b>{auction.capitalize()}</b>", header))
-        elements.append(Spacer(1, 10))
+        elements.append(Paragraph(f"Аукціон: {auction.upper()}", auction_style))
+        elements.append(Spacer(1, 14))
 
     # Цвет заголовков блоков
     section_header_color = colors.HexColor("#38c4ef")
@@ -45,28 +49,31 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
         else:
             general_section.append(row)
 
-    # ===== Основной блок =====
+    # Основной блок таблицы
     data = [[Paragraph("Загальні витрати", bold), ""]]
     data += general_section
 
-    # ===== Блок Розмитнення =====
+    # Блок Розмитнення
     if customs_section:
+        data.append(["", ""])
         data.append([Paragraph("Розмитнення авто", bold), ""])
         data += customs_section
 
-    # ===== Итог =====
+    # Итоговая строка
+    data.append(["", ""])
     data.append([
-        Paragraph("<b>До сплати</b>", bold),
-        Paragraph(f"<b>${result:,.0f}</b>", bold)
+        Paragraph("До сплати", bold_big),
+        Paragraph(f"${result:,.0f}", bold_big)
     ])
 
-    table = Table(data, colWidths=[110*mm, 60*mm])
+    # Таблица
+    table = Table(data, colWidths=[110 * mm, 60 * mm])
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), section_header_color),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("BACKGROUND", (0, len(general_section) + 1), (-1, len(general_section) + 1), section_header_color),
-        ("TEXTCOLOR", (0, len(general_section) + 1), (-1, len(general_section) + 1), colors.white),
-        ("BACKGROUND", (-2, -1), (-1, -1), colors.lightgrey),
+        ("BACKGROUND", (0, len(general_section)+2), (-1, len(general_section)+2), section_header_color),
+        ("TEXTCOLOR", (0, len(general_section)+2), (-1, len(general_section)+2), colors.white),
+        ("BACKGROUND", (0, -1), (-1, -1), colors.lightgrey),
         ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
         ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
@@ -76,4 +83,7 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
     ]))
 
     elements.append(table)
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph("Цей розрахунок є орієнтовним. Звʼяжіться з менеджером STScars для уточнення.", normal))
+
     doc.build(elements)
