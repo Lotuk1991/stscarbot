@@ -11,44 +11,68 @@ pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
 pdfmetrics.registerFont(TTFont('DejaVu-Bold', 'DejaVuSans-Bold.ttf'))
 
 def generate_import_pdf(breakdown, result, buffer, auction=None):
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     styles = getSampleStyleSheet()
-    normal = ParagraphStyle(name='Normal', fontName='DejaVu', fontSize=10)
-    bold = ParagraphStyle(name='Bold', fontName='DejaVu-Bold', fontSize=10)
+    normal = ParagraphStyle(name='Normal', fontName='DejaVu', fontSize=10, spaceAfter=5)
+    bold = ParagraphStyle(name='Bold', fontName='DejaVu-Bold', fontSize=10, spaceAfter=5)
+    header = ParagraphStyle(name='Header', fontName='DejaVu-Bold', fontSize=12, textColor=colors.HexColor("#38c4ef"), spaceAfter=10)
 
     elements = []
 
     # Логотип
     logo = Image("logo.png", width=200, height=80)
     elements.append(logo)
-    elements.append(Spacer(1, 18))
+    elements.append(Spacer(1, 20))
 
-    # Цвет шапки
-    header_color = colors.HexColor("#38c4ef")
+    # Название аукциона
+    if auction:
+        elements.append(Paragraph(f"Аукціон: <b>{auction.capitalize()}</b>", header))
+        elements.append(Spacer(1, 10))
 
-    # === Заголовок таблицы с аукционом ===
-    table_data = [[Paragraph(f"Аукціон: <b>{auction.capitalize()}</b>", bold), ""]]
+    # Цвет заголовков блоков
+    section_header_color = colors.HexColor("#38c4ef")
 
-    # Содержимое таблицы
+    # Разделение на два блока
+    customs_keys = ['ПДВ', 'Ввізне мито', 'Акциз', 'Сума розмитнення']
+    customs_section = []
+    general_section = []
+
     for k, v in breakdown.items():
         val = f"${v:,.0f}" if isinstance(v, (int, float)) else v
-        table_data.append([Paragraph(str(k), normal), Paragraph(str(val), normal)])
+        row = [Paragraph(str(k), normal), Paragraph(str(val), normal)]
+        if k in customs_keys:
+            customs_section.append(row)
+        else:
+            general_section.append(row)
 
-    # Итоговая строка
-    table_data.append([
+    # ===== Основной блок =====
+    data = [[Paragraph("Загальні витрати", bold), ""]]
+    data += general_section
+
+    # ===== Блок Розмитнення =====
+    if customs_section:
+        data.append([Paragraph("Розмитнення авто", bold), ""])
+        data += customs_section
+
+    # ===== Итог =====
+    data.append([
         Paragraph("<b>До сплати</b>", bold),
         Paragraph(f"<b>${result:,.0f}</b>", bold)
     ])
 
-    table = Table(table_data, colWidths=[110*mm, 60*mm])
+    table = Table(data, colWidths=[110*mm, 60*mm])
     table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), header_color),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
-        ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
+        ("BACKGROUND", (0, 0), (-1, 0), section_header_color),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("BACKGROUND", (0, len(general_section) + 1), (-1, len(general_section) + 1), section_header_color),
+        ("TEXTCOLOR", (0, len(general_section) + 1), (-1, len(general_section) + 1), colors.white),
+        ("BACKGROUND", (-2, -1), (-1, -1), colors.lightgrey),
+        ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
         ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
-        ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
-        ("GRID", (0, 0), (-1, -1), 1.0, colors.grey),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
     ]))
 
     elements.append(table)
