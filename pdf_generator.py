@@ -87,9 +87,9 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
 
     # Футер
     contacts = (
-        "<img src='viber.png' width='12' height='12'/> "
-        "<img src='whatsapp.png' width='12' height='12'/> "
-        "<img src='telegram.png' width='12' height='12'/> "
+        "<img src='icons8-viber-48.png' width='12' height='12'/> "
+        "<img src='icons8-whatsapp-48.png' width='12' height='12'/> "
+        "<img src='icons8-telegram-48.png' width='12' height='12'/> "
         "<b>+380934853975</b> | м.Київ | "
         "<a href='https://stscars.com.ua'>stscars.com.ua</a> | "
         "<a href='https://www.instagram.com/sts_cars'>Instagram</a> | "
