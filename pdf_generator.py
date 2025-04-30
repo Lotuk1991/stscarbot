@@ -24,10 +24,6 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
     elements.append(Image("logo.png", width=200, height=70))
     elements.append(Spacer(1, 16))
 
-    # Аукцион
-    if auction:
-        elements.append(Paragraph(f"Аукціон: <b>{auction.capitalize()}</b>", header))
-        elements.append(Spacer(1, 10))
 
     # Блоки
     customs_keys = ['ПДВ', 'Ввізне мито', 'Акциз', 'Сума розмитнення']
@@ -64,23 +60,32 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
         Paragraph(f"<b>${result:,.0f}</b>", bold)
     ])
 
+    customs_section_start = len(general_section) + 1
+    additional_section_start = customs_section_start + len(customs_section) + 1
+
     # Таблица
     table = Table(data, colWidths=[110 * mm, 60 * mm])
     table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#38c4ef")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("BACKGROUND", (0, len(data) - len(additional_present) - len(customs_present) - 1), (-1, len(data) - len(additional_present) - len(customs_present) - 1), colors.HexColor("#38c4ef")),
-        ("TEXTCOLOR", (0, len(data) - len(additional_present) - len(customs_present) - 1), (-1, len(data) - len(additional_present) - len(customs_present) - 1), colors.white),
-        ("BACKGROUND", (0, len(data) - len(additional_present) - 2), (-1, len(data) - len(additional_present) - 2), colors.HexColor("#38c4ef")),
-        ("TEXTCOLOR", (0, len(data) - len(additional_present) - 2), (-1, len(data) - len(additional_present) - 2), colors.white),
-        ("BACKGROUND", (0, -1), (-1, -1), colors.lightgrey),
-        ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
-        ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
-        ("FONTSIZE", (0, 0), (-1, -1), 10),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-        ("TOPPADDING", (0, 0), (-1, -1), 4),
-    ]))
+    ("BACKGROUND", (0, 0), (-1, 0), header_color),
+    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+    
+    # Цвет только строки "Митні платежі"
+    ("BACKGROUND", (0, customs_section_start), (-1, customs_section_start), header_color),
+    ("TEXTCOLOR", (0, customs_section_start), (-1, customs_section_start), colors.white),
+    
+    # Цвет только строки "Додаткові витрати"
+    ("BACKGROUND", (0, additional_section_start), (-1, additional_section_start), header_color),
+    ("TEXTCOLOR", (0, additional_section_start), (-1, additional_section_start), colors.white),
+
+    # Остальные стили
+    ("BACKGROUND", (0, -1), (-1, -1), colors.lightgrey),
+    ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+    ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
+    ("FONTSIZE", (0, 0), (-1, -1), 10),
+    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+    ("TOPPADDING", (0, 0), (-1, -1), 4),
+]))
 
     elements.append(table)
     elements.append(Spacer(1, 14))
