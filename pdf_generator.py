@@ -15,7 +15,7 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
     styles = getSampleStyleSheet()
     normal = ParagraphStyle(name='Normal', fontName='DejaVu', fontSize=10)
     bold = ParagraphStyle(name='Bold', fontName='DejaVu-Bold', fontSize=10)
-    header = ParagraphStyle(name='Header', fontName='DejaVu-Bold', fontSize=12, textColor=colors.HexColor("black "), alignment=1)
+    header = ParagraphStyle(name='Header', fontName='DejaVu-Bold', fontSize=12, textColor=colors.HexColor("#38c4ef"), alignment=1)
     footer = ParagraphStyle(name='Footer', fontName='DejaVu', fontSize=8, alignment=1)
 
     elements = []
@@ -77,7 +77,7 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
         ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
         ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
-        ("GRID", (0, 0), (-1, -1), 0.8, colors.black),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
     ]))
