@@ -1,89 +1,100 @@
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-# Шрифты (если ещё не зарегистрированы)
+# Регистрация шрифтов
 pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
 pdfmetrics.registerFont(TTFont('DejaVu-Bold', 'DejaVuSans-Bold.ttf'))
 
 def generate_import_pdf(breakdown, result, buffer, auction=None):
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=40)
     styles = getSampleStyleSheet()
-    
-    normal = ParagraphStyle(name='Normal', fontName='DejaVu', fontSize=10, spaceAfter=5)
-    bold = ParagraphStyle(name='Bold', fontName='DejaVu-Bold', fontSize=10, spaceAfter=5)
-    bold_big = ParagraphStyle(name='BoldBig', fontName='DejaVu-Bold', fontSize=12, spaceAfter=8)
-    header = ParagraphStyle(name='Header', fontName='DejaVu-Bold', fontSize=12, textColor=colors.HexColor("#38c4ef"), spaceAfter=10)
-    auction_style = ParagraphStyle(name='Auction', fontName='DejaVu-Bold', fontSize=11, textColor=colors.HexColor("#0077CC"), alignment=1)
-    
+    normal = ParagraphStyle(name='Normal', fontName='DejaVu', fontSize=10)
+    bold = ParagraphStyle(name='Bold', fontName='DejaVu-Bold', fontSize=10)
+    header = ParagraphStyle(name='Header', fontName='DejaVu-Bold', fontSize=12, textColor=colors.HexColor("#38c4ef"), alignment=1)
+    footer = ParagraphStyle(name='Footer', fontName='DejaVu', fontSize=8, alignment=1)
+
     elements = []
 
-    # Логотип по центру
-    logo = Image("logo.png", width=200, height=80)
-    logo.hAlign = 'CENTER'
-    elements.append(logo)
-    elements.append(Spacer(1, 30))
+    # Логотип
+    elements.append(Image("logo.png", width=200, height=70))
+    elements.append(Spacer(1, 16))
 
-    # Название аукциона
+    # Аукцион
     if auction:
-        elements.append(Paragraph(f"Аукціон: {auction.upper()}", auction_style))
-        elements.append(Spacer(1, 14))
+        elements.append(Paragraph(f"Аукціон: <b>{auction.capitalize()}</b>", header))
+        elements.append(Spacer(1, 10))
 
-    # Цвет заголовков блоков
-    section_header_color = colors.HexColor("#38c4ef")
-
-    # Разделение на два блока
+    # Блоки
     customs_keys = ['ПДВ', 'Ввізне мито', 'Акциз', 'Сума розмитнення']
-    customs_section = []
-    general_section = []
-
-    for k, v in breakdown.items():
-        val = f"${v:,.0f}" if isinstance(v, (int, float)) else v
-        row = [Paragraph(str(k), normal), Paragraph(str(val), normal)]
-        if k in customs_keys:
-            customs_section.append(row)
-        else:
-            general_section.append(row)
-
-    # Основной блок таблицы
+    additional_keys = ['Експедитор (Литва)', 'Брокерські послуги', 'Доставка в Україну', 'Сертифікація',
+                       'Пенсійний фонд', 'МРЕВ (постановка на облік)', 'Послуги компанії']
+    
     data = [[Paragraph("Загальні витрати", bold), ""]]
-    data += general_section
+    
+    # Основные
+    for k, v in breakdown.items():
+        if k not in customs_keys + additional_keys:
+            val = f"${v:,.0f}" if isinstance(v, (int, float)) else v
+            data.append([Paragraph(k, normal), Paragraph(str(val), normal)])
 
-    # Блок Розмитнення
-    if customs_section:
-        data.append(["", ""])
-        data.append([Paragraph("Розмитнення авто", bold), ""])
-        data += customs_section
+    # Митні платежі
+    customs_present = [k for k in customs_keys if k in breakdown]
+    if customs_present:
+        data.append([Paragraph("Митні платежі", bold), ""])
+        for k in customs_present:
+            val = f"${breakdown[k]:,.0f}" if isinstance(breakdown[k], (int, float)) else breakdown[k]
+            data.append([Paragraph(k, normal), Paragraph(str(val), normal)])
 
-    # Итоговая строка
-    data.append(["", ""])
+    # Додаткові витрати
+    additional_present = [k for k in additional_keys if k in breakdown]
+    if additional_present:
+        data.append([Paragraph("Додаткові витрати", bold), ""])
+        for k in additional_present:
+            val = f"${breakdown[k]:,.0f}" if isinstance(breakdown[k], (int, float)) else breakdown[k]
+            data.append([Paragraph(k, normal), Paragraph(str(val), normal)])
+
+    # Итог
     data.append([
-        Paragraph("До сплати", bold_big),
-        Paragraph(f"${result:,.0f}", bold_big)
+        Paragraph("<b>До сплати</b>", bold),
+        Paragraph(f"<b>${result:,.0f}</b>", bold)
     ])
 
     # Таблица
     table = Table(data, colWidths=[110 * mm, 60 * mm])
     table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), section_header_color),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#38c4ef")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("BACKGROUND", (0, len(general_section)+2), (-1, len(general_section)+2), section_header_color),
-        ("TEXTCOLOR", (0, len(general_section)+2), (-1, len(general_section)+2), colors.white),
+        ("BACKGROUND", (0, len(data) - len(additional_present) - len(customs_present) - 1), (-1, len(data) - len(additional_present) - len(customs_present) - 1), colors.HexColor("#38c4ef")),
+        ("TEXTCOLOR", (0, len(data) - len(additional_present) - len(customs_present) - 1), (-1, len(data) - len(additional_present) - len(customs_present) - 1), colors.white),
+        ("BACKGROUND", (0, len(data) - len(additional_present) - 2), (-1, len(data) - len(additional_present) - 2), colors.HexColor("#38c4ef")),
+        ("TEXTCOLOR", (0, len(data) - len(additional_present) - 2), (-1, len(data) - len(additional_present) - 2), colors.white),
         ("BACKGROUND", (0, -1), (-1, -1), colors.lightgrey),
         ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
         ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
     ]))
 
     elements.append(table)
-    elements.append(Spacer(1, 20))
-    elements.append(Paragraph("Цей розрахунок є орієнтовним. Звʼяжіться з менеджером STScars для уточнення.", normal))
+    elements.append(Spacer(1, 14))
+
+    # Футер
+    contacts = (
+        "<img src='viber.png' width='12' height='12'/> "
+        "<img src='whatsapp.png' width='12' height='12'/> "
+        "<img src='telegram.png' width='12' height='12'/> "
+        "<b>+380934853975</b> | м.Київ | "
+        "<a href='https://stscars.com.ua'>stscars.com.ua</a> | "
+        "<a href='https://www.instagram.com/sts_cars'>Instagram</a> | "
+        "<a href='https://t.me/stscars'>Telegram</a>"
+    )
+    elements.append(Paragraph(contacts, footer))
 
     doc.build(elements)
