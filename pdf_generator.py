@@ -1,3 +1,9 @@
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
+pdfmetrics.registerFont(TTFont('DejaVu-Bold', 'DejaVuSans-Bold.ttf'))
+
 def generate_import_pdf(breakdown, result, buffer, auction=None):
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     styles = getSampleStyleSheet()
