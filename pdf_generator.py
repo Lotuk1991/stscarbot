@@ -1,31 +1,36 @@
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
+# Регистрация шрифтов
 pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
 pdfmetrics.registerFont(TTFont('DejaVu-Bold', 'DejaVuSans-Bold.ttf'))
 
 def generate_import_pdf(breakdown, result, buffer, auction=None):
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     styles = getSampleStyleSheet()
-    normal = ParagraphStyle(name='Normal', fontName='DejaVu', fontSize=10)
-    bold = ParagraphStyle(name='Bold', fontName='DejaVu-Bold', fontSize=10)
-    center_bold = ParagraphStyle(name='CenterBold', fontName='DejaVu-Bold', fontSize=12, alignment=1)  # центр
-    section_title = ParagraphStyle(name='SectionTitle', fontName='DejaVu-Bold', fontSize=10, textColor=colors.white)
+    normal = ParagraphStyle(name='Normal', fontName='DejaVu', fontSize=10, spaceAfter=5)
+    bold = ParagraphStyle(name='Bold', fontName='DejaVu-Bold', fontSize=10, spaceAfter=5)
+    header = ParagraphStyle(name='Header', fontName='DejaVu-Bold', fontSize=12, textColor=colors.HexColor("#38c4ef"), spaceAfter=10)
 
     elements = []
 
     # Логотип
     logo = Image("logo.png", width=200, height=80)
     elements.append(logo)
-    elements.append(Spacer(1, 18))
+    elements.append(Spacer(1, 20))
 
-    # Название аукциона — по центру, черным
+    # Название аукциона
     if auction:
-        elements.append(Paragraph(f"Аукціон: {auction.capitalize()}", center_bold))
-        elements.append(Spacer(1, 14))
+        elements.append(Paragraph(f"Аукціон: <b>{auction.capitalize()}</b>", header))
+        elements.append(Spacer(1, 10))
 
-    # Цвет блока заголовков
-    header_color = colors.HexColor("#38c4ef")
+    # Цвет заголовков блоков
+    section_header_color = colors.HexColor("#38c4ef")
 
     # Разделение на два блока
     customs_keys = ['ПДВ', 'Ввізне мито', 'Акциз', 'Сума розмитнення']
@@ -40,34 +45,28 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
         else:
             general_section.append(row)
 
-    # Формируем таблицу
-    data = []
-
-    # Блок: Загальні витрати
-    data.append([Paragraph("Загальні витрати", section_title), ""])
+    # ===== Основной блок =====
+    data = [[Paragraph("Загальні витрати", bold), ""]]
     data += general_section
 
-    # Блок: Розмитнення авто
+    # ===== Блок Розмитнення =====
     if customs_section:
-        data.append([Paragraph("Розмитнення авто", section_title), ""])
+        data.append([Paragraph("Розмитнення авто", bold), ""])
         data += customs_section
 
-    # Итог
+    # ===== Итог =====
     data.append([
         Paragraph("<b>До сплати</b>", bold),
         Paragraph(f"<b>${result:,.0f}</b>", bold)
     ])
 
-    table = Table(data, colWidths=[110 * mm, 60 * mm])
+    table = Table(data, colWidths=[110*mm, 60*mm])
     table.setStyle(TableStyle([
-        # Шапки блоков
-        ("BACKGROUND", (0, 0), (-1, 0), header_color),
+        ("BACKGROUND", (0, 0), (-1, 0), section_header_color),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("BACKGROUND", (0, len(general_section)+1), (-1, len(general_section)+1), header_color),
-        ("TEXTCOLOR", (0, len(general_section)+1), (-1, len(general_section)+1), colors.white),
-        # Итог
-        ("BACKGROUND", (0, -1), (-1, -1), colors.lightgrey),
-        # Остальные стили
+        ("BACKGROUND", (0, len(general_section) + 1), (-1, len(general_section) + 1), section_header_color),
+        ("TEXTCOLOR", (0, len(general_section) + 1), (-1, len(general_section) + 1), colors.white),
+        ("BACKGROUND", (-2, -1), (-1, -1), colors.lightgrey),
         ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
         ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
