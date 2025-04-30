@@ -320,8 +320,8 @@ def calculate_import(data):
     expeditor = data.get('expeditor', 350)
     broker = data.get('broker', 150)
     delivery_ua = data.get('delivery_ua', 1000)
-    cert = data.get('cert', 150)
-    stscars = data.get('stscars', 0)
+    cert = data.get('cert', 120)
+    stscars = data.get('stscars', 500)
 
     price = data['price']
     year = data['year']
