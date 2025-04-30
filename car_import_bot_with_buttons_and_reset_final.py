@@ -165,16 +165,16 @@ async def choose_location(call: types.CallbackQuery):
         text = generate_result_text(breakdown, result, user_data[user_id])
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("🚗 Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📗 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("🧭 Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("🤝 Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("🚚 Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("🛠️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("🏢 Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
             InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
@@ -196,16 +196,16 @@ async def choose_fuel(call: types.CallbackQuery):
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("🚗 Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📗 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("🧭 Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("🤝 Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("🚚 Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("🛠️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("🏢 Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
             InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
@@ -229,16 +229,16 @@ async def choose_year(call: types.CallbackQuery):
         text = generate_result_text(breakdown, result, user_data[user_id])
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("🚗 Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📗 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("🧭 Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("🤝 Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("🚚 Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("🛠️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("🏢 Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
             InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
@@ -263,16 +263,16 @@ async def choose_volume(call: types.CallbackQuery):
         # Кнопки редактирования
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("🚗 Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📗 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("🧭 Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("🤝 Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("🚚 Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("🛠️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("🏢 Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
             InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
@@ -296,16 +296,16 @@ async def choose_power_kw(call: types.CallbackQuery):
 
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("🚗 Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
-            InlineKeyboardButton("⚡ Потужність (кВт)", callback_data="edit_volume"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📗 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("🧭 Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("🤝 Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("🚚 Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("🛠️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("🏢 Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
             InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
@@ -494,16 +494,16 @@ async def handle_numeric_input(msg: types.Message):
 
                 markup = InlineKeyboardMarkup(row_width=2)
                 markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("🚗 Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📗 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("🧭 Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("🤝 Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("🚚 Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("🛠️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("🏢 Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
             InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
@@ -525,17 +525,18 @@ async def handle_numeric_input(msg: types.Message):
 
                 markup = InlineKeyboardMarkup(row_width=2)
                 markup.add(
-            InlineKeyboardButton("✏️ Ціна", callback_data="edit_price"),
+            InlineKeyboardButton("🚗 Ціна", callback_data="edit_price"),
             InlineKeyboardButton("📍 Локація", callback_data="edit_location"),
             InlineKeyboardButton("⚡ Пальне", callback_data="edit_fuel"),
             InlineKeyboardButton("📅 Рік", callback_data="edit_year"),
-            InlineKeyboardButton("🛠 Обʼєм", callback_data="edit_volume"),
-            InlineKeyboardButton("✏️ Експедитор", callback_data="edit_expeditor"),
-            InlineKeyboardButton("✏️ Брокер", callback_data="edit_broker"),
-            InlineKeyboardButton("✏️ Доставка в Україну", callback_data="edit_ukraine_delivery"),
-            InlineKeyboardButton("✏️ Сертифікація", callback_data="edit_cert"),
-            InlineKeyboardButton("✏️ Послуги компанії", callback_data="edit_stscars"),
+            InlineKeyboardButton("📗 Обʼєм", callback_data="edit_volume"),
+            InlineKeyboardButton("🧭 Експедитор", callback_data="edit_expeditor"),
+            InlineKeyboardButton("🤝 Брокер", callback_data="edit_broker"),
+            InlineKeyboardButton("🚚 Доставка в Україну", callback_data="edit_ukraine_delivery"),
+            InlineKeyboardButton("🛠️ Сертифікація", callback_data="edit_cert"),
+            InlineKeyboardButton("🏢 Послуги компанії", callback_data="edit_stscars"),
             InlineKeyboardButton("📄 Згенерувати PDF", callback_data="generate_pdf"),
+            InlineKeyboardButton("❓ Задати питання експерту", callback_data="ask_expert"),
             InlineKeyboardButton("📦 Почати з початку", callback_data="reset")
         )
                 await msg.answer(text, reply_markup=markup, parse_mode="Markdown")
