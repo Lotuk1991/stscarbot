@@ -6,7 +6,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-# Шрифты
+# Регистрация шрифтов
 pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
 pdfmetrics.registerFont(TTFont('DejaVu-Bold', 'DejaVuSans-Bold.ttf'))
 
@@ -15,43 +15,51 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
     styles = getSampleStyleSheet()
     normal = ParagraphStyle(name='Normal', fontName='DejaVu', fontSize=10)
     bold = ParagraphStyle(name='Bold', fontName='DejaVu-Bold', fontSize=10)
-    section_title = ParagraphStyle(name='SectionTitle', fontName='DejaVu-Bold', fontSize=10, textColor=colors.black)
-    footer_style = ParagraphStyle(name='Footer', fontName='DejaVu', fontSize=8, alignment=1)
+    header_style = ParagraphStyle(name='Header', fontName='DejaVu-Bold', fontSize=12, alignment=1)
+    footer_style = ParagraphStyle(name='Footer', fontName='DejaVu', fontSize=9, alignment=1)
 
     elements = []
 
     # Логотип
     logo = Image("logo.png", width=200, height=80)
     elements.append(logo)
-    elements.append(Spacer(1, 14))
+    elements.append(Spacer(1, 16))
 
-    # Ключевые блоки
+    # Цвет заголовков секций
+    header_color = colors.HexColor("#38c4ef")
+
+    # Ключи блоков
     customs_keys = ['ПДВ (20%)', 'Ввізне мито (10%)', 'Акциз (EUR, перерахований в USD)', 'Митні платежі (всього)']
     additional_keys = ['Експедитор (Литва)', 'Брокерські послуги', 'Доставка в Україну', 'Сертифікація', 'Пенсійний фонд', 'МРЕВ (постановка на облік)', 'Послуги компанії']
 
-    data = [[Paragraph("Загальні витрати", section_title), ""]]
+    # Сборка таблицы
+    data = [[Paragraph("Загальні витрати", bold), ""]]
 
-    
-    general_keys = [k for k in breakdown if k not in customs_keys + additional_keys]
-    for k in general_keys:
-        val = f"${breakdown[k]:,.0f}" if isinstance(breakdown[k], (int, float)) else breakdown[k]
-        data.append([Paragraph(k, normal), Paragraph(val, normal)])
-
-    # Митні платежі
-    customs_present = [k for k in customs_keys if k in breakdown]
-    if customs_present:
-        data.append([Paragraph("Митні платежі", section_title), ""])
-        for k in customs_present:
-            val = f"${breakdown[k]:,.0f}" if isinstance(breakdown[k], (int, float)) else breakdown[k]
+    # Основной блок
+    for k, v in breakdown.items():
+        if k not in customs_keys and k not in additional_keys:
+            val = f"${v:,.0f}" if isinstance(v, (int, float)) else v
             data.append([Paragraph(k, normal), Paragraph(val, normal)])
+        if k == 'Рік випуску':
+            # После года добавляем блок "Митні платежі"
+            customs_present = [key for key in customs_keys if key in breakdown]
+            if customs_present:
+                data.append([Paragraph("Митні платежі", bold), ""])
+                for ck in customs_present:
+                    val = f"${breakdown[ck]:,.0f}" if isinstance(breakdown[ck], (int, float)) else breakdown[ck]
+                    row_style = ("BACKGROUND", (0, len(data)), (-1, len(data)), colors.lightgrey) if ck == 'Митні платежі (всього)' else None
+                    data.append([Paragraph(ck, normal), Paragraph(val, normal)])
+                    if row_style:
+                        # позже добавим стиль на эту строку
+                        pass
 
-    # Додаткові витрати
-    additional_present = [k for k in additional_keys if k in breakdown]
+    # Блок дополнительных
+    additional_present = [key for key in additional_keys if key in breakdown]
     if additional_present:
-        data.append([Paragraph("Додаткові витрати", section_title), ""])
-        for k in additional_present:
-            val = f"${breakdown[k]:,.0f}" if isinstance(breakdown[k], (int, float)) else breakdown[k]
-            data.append([Paragraph(k, normal), Paragraph(val, normal)])
+        data.append([Paragraph("Додаткові витрати", bold), ""])
+        for ak in additional_present:
+            val = f"${breakdown[ak]:,.0f}" if isinstance(breakdown[ak], (int, float)) else breakdown[ak]
+            data.append([Paragraph(ak, normal), Paragraph(val, normal)])
 
     # Итог
     data.append([
@@ -59,42 +67,48 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
         Paragraph(f"<b>${result:,.0f}</b>", bold)
     ])
 
+    # Таблица и стили
     table = Table(data, colWidths=[110 * mm, 60 * mm])
-    table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#38c4ef")),
+    customs_title_index = next((i for i, row in enumerate(data) if row[0].getPlainText() == "Митні платежі"), None)
+    customs_total_index = next((i for i, row in enumerate(data) if "Митні платежі (всього)" in row[0].getPlainText()), None)
+    additional_index = next((i for i, row in enumerate(data) if row[0].getPlainText() == "Додаткові витрати"), None)
+
+    style = [
+        ("BACKGROUND", (0, 0), (-1, 0), header_color),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
-
-        ("BACKGROUND", (0, customs_start_row), (-1, customs_start_row), colors.HexColor("#38c4ef")),
-        ("TEXTCOLOR", (0, len(general_keys) + 1), (-1, len(general_keys) + 1), colors.black),
-
-        ("BACKGROUND", (0, len(data) - len(additional_present) - 2), (-1, len(data) - len(additional_present) - 2), colors.HexColor("#38c4ef")),
-        ("TEXTCOLOR", (0, len(data) - len(additional_present) - 2), (-1, len(data) - len(additional_present) - 2), colors.black),
-        ("BACKGROUND", (0, total_customs_row), (-1, total_customs_row), colors.lightgrey),
-        ("BACKGROUND", (0, -1), (-1, -1), colors.lightgrey),
         ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
         ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
-    ]))
+        ("BACKGROUND", (0, -1), (-1, -1), colors.lightgrey),
+    ]
 
+    if customs_title_index:
+        style.append(("BACKGROUND", (0, customs_title_index), (-1, customs_title_index), header_color))
+        style.append(("TEXTCOLOR", (0, customs_title_index), (-1, customs_title_index), colors.black))
+
+    if customs_total_index:
+        style.append(("BACKGROUND", (0, customs_total_index), (-1, customs_total_index), colors.lightgrey))
+
+    if additional_index:
+        style.append(("BACKGROUND", (0, additional_index), (-1, additional_index), header_color))
+        style.append(("TEXTCOLOR", (0, additional_index), (-1, additional_index), colors.black))
+
+    table.setStyle(TableStyle(style))
     elements.append(table)
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(1, 16))
 
     # Футер
     contacts = (
-        "<para alignment='center'>"
-        "<img src='icons8-viber-48.png' width='12' height='12'/> "
-        "<img src='icons8-whatsapp-48.png' width='12' height='12'/> "
-        "<img src='icons8-telegram-48.png' width='12' height='12'/> "
+        "<img src='icons8-viber-48.png' width='10' height='10'/> "
+        "<img src='icons8-whatsapp-48.png' width='10' height='10'/> "
+        "<img src='icons8-telegram-48.png' width='10' height='10'/> "
         "<b>+380934853975</b> | м.Київ | "
         "<a href='https://stscars.com.ua'>stscars.com.ua</a> | "
         "<a href='https://www.instagram.com/sts_cars'>Instagram</a> | "
         "<a href='https://t.me/stscars'>Telegram</a>"
-        "</para>"
     )
-
     elements.append(Paragraph(contacts, footer_style))
-
     doc.build(elements)
