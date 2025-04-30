@@ -384,7 +384,7 @@ def calculate_import(data):
         pension = customs_base * pension_percent
 
     total = price + auction_fee + delivery + import_duty + excise + vat + \
-            expeditor + broker + delivery_ua + cert + pension + invoice_fee + stscars
+            expeditor + broker + delivery_ua + cert + pension + 50 + invoice_fee + stscars
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
