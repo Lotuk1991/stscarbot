@@ -38,8 +38,13 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
     # Основной блок
     for k, v in breakdown.items():
         if k not in customs_keys and k not in additional_keys:
-            val = f"${v:,.0f}" if isinstance(v, (int, float)) else v
-            data.append([Paragraph(k, normal), Paragraph(val, normal)])
+    if k == "Рік випуску":
+        val = f"{v}"  # без доллара
+    elif isinstance(v, (int, float)):
+        val = f"${v:,.0f}"
+    else:
+        val = v
+    data.append([Paragraph(k, normal), Paragraph(val, normal)])
         if k == 'Рік випуску':
             # После года добавляем блок "Митні платежі"
             customs_present = [key for key in customs_keys if key in breakdown]
