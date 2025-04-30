@@ -388,6 +388,7 @@ def calculate_import(data):
     tamozhnya_total = import_duty + excise + vat
 
     breakdown = {
+        'Аукціон': auction.capitalize(),
         'Ціна авто': price,
         'Аукціонний збір': auction_fee,
         'Локація': location,
