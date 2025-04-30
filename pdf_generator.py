@@ -46,7 +46,7 @@ for k, v in breakdown.items():
             val = v
         data.append([Paragraph(k, normal), Paragraph(val, normal)])
 
-        if k == 'Рік випуску':
+        if k == "Рік випуску":
             # После года добавляем блок "Митні платежі"
             customs_present = [key for key in customs_keys if key in breakdown]
             if customs_present:
@@ -61,7 +61,6 @@ for k, v in breakdown.items():
                     ) if ck == 'Митні платежі (всього)' else None
                     data.append([Paragraph(ck, normal), Paragraph(val, normal)])
                     if row_style:
-                        # позже добавим стиль на эту строку
                         pass
 
     # Блок дополнительных
