@@ -36,32 +36,32 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
     data = [[Paragraph("Загальні витрати", bold), ""]]
 
     # Основной блок
-for k, v in breakdown.items():
-    if k not in customs_keys and k not in additional_keys:
-        if k == "Рік випуску":
-            val = f"{v}"  # без доллара
-        elif isinstance(v, (int, float)):
-            val = f"${v:,.0f}"
-        else:
-            val = v
-        data.append([Paragraph(k, normal), Paragraph(val, normal)])
+    for k, v in breakdown.items():
+        if k not in customs_keys and k not in additional_keys:
+            if k == "Рік випуску":
+                val = f"{v}"  # без доллара
+            elif isinstance(v, (int, float)):
+                val = f"${v:,.0f}"
+            else:
+                val = v
+            data.append([Paragraph(k, normal), Paragraph(val, normal)])
 
-        if k == "Рік випуску":
-            # После года добавляем блок "Митні платежі"
-            customs_present = [key for key in customs_keys if key in breakdown]
-            if customs_present:
-                data.append([Paragraph("Митні платежі", bold), ""])
-                for ck in customs_present:
-                    val = f"${breakdown[ck]:,.0f}" if isinstance(breakdown[ck], (int, float)) else breakdown[ck]
-                    row_style = (
-                        "BACKGROUND",
-                        (0, len(data)),
-                        (-1, len(data)),
-                        colors.lightgrey
-                    ) if ck == 'Митні платежі (всього)' else None
-                    data.append([Paragraph(ck, normal), Paragraph(val, normal)])
-                    if row_style:
-                        pass
+            if k == "Рік випуску":
+                # После года добавляем блок "Митні платежі"
+                customs_present = [key for key in customs_keys if key in breakdown]
+                if customs_present:
+                    data.append([Paragraph("Митні платежі", bold), ""])
+                    for ck in customs_present:
+                        val = f"${breakdown[ck]:,.0f}" if isinstance(breakdown[ck], (int, float)) else breakdown[ck]
+                        row_style = (
+                            "BACKGROUND",
+                            (0, len(data)),
+                            (-1, len(data)),
+                            colors.lightgrey
+                        ) if ck == 'Митні платежі (всього)' else None
+                        data.append([Paragraph(ck, normal), Paragraph(val, normal)])
+                        if row_style:
+                            pass
 
     # Блок дополнительных
     additional_present = [key for key in additional_keys if key in breakdown]
