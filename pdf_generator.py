@@ -31,9 +31,7 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
 
     data = [[Paragraph("Загальні витрати", section_title), ""]]
 
-    if auction:
-        data.append([Paragraph("Аукціон", normal), Paragraph(auction.capitalize(), normal)])
-
+    
     general_keys = [k for k in breakdown if k not in customs_keys + additional_keys]
     for k in general_keys:
         val = f"${breakdown[k]:,.0f}" if isinstance(breakdown[k], (int, float)) else breakdown[k]
@@ -66,12 +64,12 @@ def generate_import_pdf(breakdown, result, buffer, auction=None):
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#38c4ef")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
 
-        ("BACKGROUND", (0, len(general_keys) + 1), (-1, len(general_keys) + 1), colors.HexColor("#38c4ef")),
+        ("BACKGROUND", (0, customs_start_row), (-1, customs_start_row), colors.HexColor("#38c4ef")),
         ("TEXTCOLOR", (0, len(general_keys) + 1), (-1, len(general_keys) + 1), colors.black),
 
         ("BACKGROUND", (0, len(data) - len(additional_present) - 2), (-1, len(data) - len(additional_present) - 2), colors.HexColor("#38c4ef")),
         ("TEXTCOLOR", (0, len(data) - len(additional_present) - 2), (-1, len(data) - len(additional_present) - 2), colors.black),
-
+        ("BACKGROUND", (0, total_customs_row), (-1, total_customs_row), colors.lightgrey),
         ("BACKGROUND", (0, -1), (-1, -1), colors.lightgrey),
         ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
         ("FONTNAME", (0, 0), (-1, -1), 'DejaVu'),
