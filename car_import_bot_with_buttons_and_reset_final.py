@@ -78,7 +78,7 @@ def get_auction_keyboard():
                InlineKeyboardButton("IAAI", callback_data="iaai"))
     return markup
 
-def create_location_buttons(page=0, page_size=30):
+def create_location_buttons(page=0, page_size=60):
     locations = list(delivery_dict.keys())
     page_locations = locations[page * page_size:(page + 1) * page_size]
     markup = InlineKeyboardMarkup(row_width=2)
