@@ -81,7 +81,7 @@ def get_auction_keyboard():
 def create_location_buttons(page=0, page_size=100):
     locations = list(delivery_dict.keys())
     page_locations = locations[page * page_size:(page + 1) * page_size]
-    markup = InlineKeyboardMarkup(row_width=3)
+    markup = InlineKeyboardMarkup(row_width=2)
     
     buttons = [InlineKeyboardButton(location, callback_data=f"loc_{location}") for location in page_locations]
     for i in range(0, len(buttons), 2):
